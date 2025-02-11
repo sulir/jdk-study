@@ -15,12 +15,13 @@ TOOLS = {'build.gradle': 'Gradle', 'build.gradle.kts': 'Gradle', 'pom.xml': 'Mav
 EXCLUDE = [[r'.*\.java', 'import android.'], [r'AndroidManifest\.xml', ''],
            [r'.*\.java', 'import javax.microedition.'],
            [r'.*\.(c|cc|cpp|cxx)', 'JNIEXPORT']]
+WRAPPERS = {'Gradle': 'gradlew', 'Maven': 'mvnw', 'Ant': 'antw'}
 
 def create_dataset(github_csv, output_dir):
     with open(github_csv) as in_file, open(join(output_dir, OUTPUT_CSV), 'w') as out_file:
         reader = DictReader(in_file)
         # noinspection PyTypeChecker
-        writer = DictWriter(out_file, ['name', 'commit', 'tool'])
+        writer = DictWriter(out_file, ['name', 'commit', 'tool', 'wrapper'])
         writer.writeheader()
 
         projects = [row for row in reader if row['license'] != 'Other']
@@ -55,7 +56,9 @@ def create_project(project, output_dir, hashes):
     if project_has_excluded_technology(project_dir):
         return None
 
-    return {'name': project['name'], 'commit': commit, 'tool': tool}
+    wrapper = detect_wrapper(project_dir, tool)
+
+    return {'name': project['name'], 'commit': commit, 'tool': tool, 'wrapper': wrapper}
 
 def delete_project(project, output_dir):
     rmtree(get_project_dir(project, output_dir), ignore_errors=True)
@@ -104,6 +107,12 @@ def file_has_excluded_technology(file):
                 if content in f.read():
                     return True
     return False
+
+def detect_wrapper(project_dir, tool):
+    if isfile(join(project_dir, WRAPPERS[tool])):
+        return WRAPPERS[tool]
+    else:
+        return None
 
 if __name__ == '__main__':
     if len(argv) == 3:
