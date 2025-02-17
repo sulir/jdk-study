@@ -103,9 +103,13 @@ def project_has_excluded_technology(project_dir):
 def file_has_excluded_technology(file):
     for pattern, content in EXCLUDE:
         if fullmatch(pattern, basename(file)):
-            with open(file, encoding='ascii', errors='ignore') as f:
-                if content in f.read():
-                    return True
+            try:
+                with open(file, encoding='ascii', errors='ignore') as f:
+                    if content in f.read():
+                        return True
+            except FileNotFoundError as e:
+                print(e)
+                return True
     return False
 
 def detect_wrapper(project_dir, tool):
