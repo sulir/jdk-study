@@ -13,8 +13,7 @@ GIT_URL = 'https://github.com/%s.git'
 OUTPUT_CSV = 'projects.csv'
 TOOLS = {'build.gradle': 'Gradle', 'build.gradle.kts': 'Gradle', 'pom.xml': 'Maven', 'build.xml': 'Ant'}
 EXCLUDE = [[r'.*\.java', 'import android.'], [r'AndroidManifest\.xml', ''],
-           [r'.*\.java', 'import javax.microedition.'],
-           [r'.*\.(c|cc|cpp|cxx)', 'JNIEXPORT']]
+           [r'.*\.java', 'import javax.microedition.']]
 WRAPPERS = {'Gradle': 'gradlew', 'Maven': 'mvnw', 'Ant': 'antw'}
 
 def create_dataset(github_csv, output_dir):
