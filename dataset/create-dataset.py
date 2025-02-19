@@ -12,8 +12,8 @@ PROJECT_COUNT = 2500
 GIT_URL = 'https://github.com/%s.git'
 OUTPUT_CSV = 'projects.csv'
 TOOLS = {'build.gradle': 'Gradle', 'build.gradle.kts': 'Gradle', 'pom.xml': 'Maven', 'build.xml': 'Ant'}
-EXCLUDE = [[r'.*\.java', 'import android.'], [r'AndroidManifest\.xml', ''],
-           [r'.*\.java', 'import javax.microedition.']]
+EXCLUDE = [[r'.*\.java', r'\s*import\s+(javax\.microedition|(com\.(google\.)?)?android|androidx)\..*'],
+           [r'AndroidManifest\.xml', r'.*']]
 WRAPPERS = {'Gradle': 'gradlew', 'Maven': 'mvnw', 'Ant': 'antw'}
 
 def create_dataset(github_csv, output_dir):
@@ -95,20 +95,20 @@ def project_is_duplicate(project_dir, hashes):
 def project_has_excluded_technology(project_dir):
     for root, dirs, files in walk(project_dir):
         for file in files:
-            if file_has_excluded_technology(join(root, file)):
-                return True
+            for name, content in EXCLUDE:
+                if file_matches(join(root, file), name, content):
+                    return True
     return False
 
-def file_has_excluded_technology(file):
-    for pattern, content in EXCLUDE:
-        if fullmatch(pattern, basename(file)):
-            try:
-                with open(file, encoding='ascii', errors='ignore') as f:
-                    if content in f.read():
-                        return True
-            except FileNotFoundError as e:
-                print(e)
-                return True
+def file_matches(file, name, content):
+    if fullmatch(name, basename(file)):
+        try:
+            with open(file, encoding='ascii', errors='ignore') as f:
+                if any(fullmatch(content, line.rstrip()) for line in f):
+                    return True
+        except FileNotFoundError as e:
+            print(e)
+            return True
     return False
 
 def detect_wrapper(project_dir, tool):
