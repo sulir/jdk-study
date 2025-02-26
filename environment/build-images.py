@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 from pty import spawn
+from sys import exit
 
 MIN_JAVA = 6
 MAX_JAVA = 23
@@ -22,7 +23,7 @@ def build_all_images():
     for java_version in range(MIN_JAVA, MAX_JAVA + 1):
         print(f"\nBuilding image for Java {java_version}...\n")
         if not build_image(java_version):
-            break
+            exit(1)
 
 def build_image(java_version):
     command = ['docker', 'build']
