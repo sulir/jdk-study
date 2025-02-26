@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+from os.path import dirname, realpath
 from pty import spawn
 from sys import exit
 
@@ -30,7 +31,8 @@ def build_image(java_version):
     for software, versions in VERSIONS.items():
         version = get_version(software, java_version)
         command += '--build-arg', '%s=%s' % (software.upper(), version)
-    command += '--tag', '%s:%d' % (IMAGE_NAME, java_version), '.'
+    context_dir = dirname(realpath(__file__))
+    command += '--tag', '%s:%d' % (IMAGE_NAME, java_version), context_dir
 
     return spawn(command) == 0
 
