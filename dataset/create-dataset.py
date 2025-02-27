@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from csv import DictReader, DictWriter
+from csv import DictReader
 from os import walk
 from os.path import join, isfile, basename
 from random import shuffle
@@ -10,29 +10,20 @@ from sys import argv
 
 PROJECT_COUNT = 2500
 GIT_URL = 'https://github.com/%s.git'
-OUTPUT_CSV = 'projects.csv'
-TOOLS = {'build.gradle': 'Gradle', 'build.gradle.kts': 'Gradle', 'pom.xml': 'Maven', 'build.xml': 'Ant'}
+TOOLS = ['build.gradle', 'build.gradle.kts', 'pom.xml', 'build.xml']
 EXCLUDE = [[r'.*\.java', r'\s*import\s+(javax\.microedition|(com\.(google\.)?)?android|androidx)\..*'],
            [r'AndroidManifest\.xml', r'.*']]
-WRAPPERS = {'Gradle': 'gradlew', 'Maven': 'mvnw', 'Ant': 'antw'}
 
 def create_dataset(github_csv, output_dir):
-    with open(github_csv) as in_file, open(join(output_dir, OUTPUT_CSV), 'w') as out_file:
+    with open(github_csv) as in_file:
         reader = DictReader(in_file)
-        # noinspection PyTypeChecker
-        writer = DictWriter(out_file, ['name', 'commit', 'tool', 'wrapper'])
-        writer.writeheader()
-
         projects = [row for row in reader if row['license'] != 'Other']
         shuffle(projects)
         included = 0
         hashes = set()
 
         for project in projects:
-            result = create_project(project, output_dir, hashes)
-            if result is not None:
-                writer.writerow(result)
-                out_file.flush()
+            if create_project(project, output_dir, hashes):
                 included += 1
                 if included == PROJECT_COUNT:
                     break
@@ -41,23 +32,11 @@ def create_dataset(github_csv, output_dir):
 
 def create_project(project, output_dir, hashes):
     print(project['name'])
-    project_dir, commit = clone_repo(project, output_dir)
-    if project_dir is None:
-        return None
-
-    tool = detect_tool(project_dir)
-    if tool is None:
-        return None
-
-    if project_is_duplicate(project_dir, hashes):
-        return None
-
-    if project_has_excluded_technology(project_dir):
-        return None
-
-    wrapper = detect_wrapper(project_dir, tool)
-
-    return {'name': project['name'], 'commit': commit, 'tool': tool, 'wrapper': wrapper}
+    project_dir = clone_repo(project, output_dir)
+    return (project_dir is not None
+            and has_tool(project_dir)
+            and not project_is_duplicate(project_dir, hashes)
+            and not project_has_excluded_technology(project_dir))
 
 def delete_project(project, output_dir):
     rmtree(get_project_dir(project, output_dir), ignore_errors=True)
@@ -71,16 +50,12 @@ def clone_repo(project, output_dir):
 
     try:
         run(['git', 'clone', '--depth=1', url, project_dir], stdout=DEVNULL, stderr=DEVNULL, check=True)
-        commit = check_output(['git', 'rev-parse', 'HEAD'], cwd=project_dir).decode().strip()
-        return project_dir, commit
+        return project_dir
     except CalledProcessError:
-        return None, None
+        return None
 
-def detect_tool(project_dir):
-    for file, tool in TOOLS.items():
-        if isfile(join(project_dir, file)):
-            return tool
-    return None
+def has_tool(project_dir):
+    return any(isfile(join(project_dir, file)) for file in TOOLS)
 
 def project_is_duplicate(project_dir, hashes):
     command = 'git ls-files --format="%(objectname) %(path)" | git hash-object --stdin'
@@ -111,14 +86,8 @@ def file_matches(file, name, content):
             return True
     return False
 
-def detect_wrapper(project_dir, tool):
-    if isfile(join(project_dir, WRAPPERS[tool])):
-        return WRAPPERS[tool]
-    else:
-        return None
-
 if __name__ == '__main__':
     if len(argv) == 3:
         create_dataset(argv[1], argv[2])
     else:
-        print("Usage: create-dataset.py <github.csv> <output_dir>")
+        print("Usage: %s <github.csv> <output_dir>" % basename(__file__))
