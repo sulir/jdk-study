@@ -1,6 +1,10 @@
 FROM ubuntu:24.04
 
 ENV JAVA_HOME=/opt/java
+ENV ULIMIT_FILES=1048576
+
+ENTRYPOINT ["/bin/sh", "-c", "ulimit -n $ULIMIT_FILES 2>/dev/null; exec \"$@\"", "--"]
+CMD ["/bin/bash"]
 
 RUN apt-get update && apt-get install -y \
     curl \
