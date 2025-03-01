@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-from os.path import dirname, realpath
+from os.path import dirname, realpath, abspath
 from pty import spawn
-from sys import exit
+from sys import exit, path
+path.insert(1, dirname(dirname(abspath(__file__))))
+from common import MIN_JAVA, MAX_JAVA, IMAGE_NAME
 
-MIN_JAVA = 6
-MAX_JAVA = 23
 VERSIONS = {
     'Zulu': {6: '6.22.0.3', 7: '7.56.0.11', 8: '8.84.0.15', 9: '9.0.7.1', 10: '10.3.5', 11: '11.78.15',
              12: '12.3.11', 13: '13.54.17', 14: '14.29.23', 15: '15.46.17', 16: '16.32.15', 17: '17.56.15',
@@ -18,7 +18,6 @@ VERSIONS = {
     'Ivy': {6: '2.4.0', 7: '2.5.3'},
     'Bouncy_Castle': {6: '1.67', 7: ''},
 }
-IMAGE_NAME = 'sulir/jdk-study'
 
 def build_all_images():
     for java_version in range(MIN_JAVA, MAX_JAVA + 1):
