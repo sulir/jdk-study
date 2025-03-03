@@ -1,16 +1,17 @@
 #!/usr/bin/env python3
 from csv import DictReader
 from os import walk
-from os.path import join, isfile, basename
+from os.path import abspath, basename, dirname, isfile, join
 from random import shuffle
 from re import fullmatch
 from shutil import rmtree
-from subprocess import run, DEVNULL, CalledProcessError, check_output
-from sys import argv
+from subprocess import CalledProcessError, check_output, DEVNULL, run
+from sys import argv, path
+path.insert(1, dirname(dirname(abspath(__file__))))
+from common import TOOLS
 
 PROJECT_COUNT = 2500
 GIT_URL = 'https://github.com/%s.git'
-TOOLS = ['build.gradle', 'build.gradle.kts', 'pom.xml', 'build.xml']
 EXCLUDE = [[r'.*\.java', r'\s*import\s+(javax\.microedition|(com\.(google\.)?)?android|androidx)\..*'],
            [r'AndroidManifest\.xml', r'.*']]
 
@@ -55,7 +56,7 @@ def clone_repo(project, output_dir):
         return None
 
 def has_tool(project_dir):
-    return any(isfile(join(project_dir, file)) for file in TOOLS)
+    return any(isfile(join(project_dir, file)) for file in TOOLS.keys())
 
 def project_is_duplicate(project_dir, hashes):
     command = 'git ls-files --format="%(objectname) %(path)" | git hash-object --stdin'
