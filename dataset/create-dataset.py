@@ -56,7 +56,10 @@ def clone_repo(project, output_dir):
         return None
 
 def has_tool(project_dir):
-    return any(isfile(join(project_dir, file)) for file in TOOLS.keys())
+    for tool in TOOLS:
+        if any(isfile(join(project_dir, file)) for file in tool.files):
+            return True
+    return False
 
 def project_is_duplicate(project_dir, hashes):
     command = 'git ls-files --format="%(objectname) %(path)" | git hash-object --stdin'
