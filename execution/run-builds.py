@@ -10,6 +10,9 @@ path.insert(1, dirname(dirname(abspath(__file__))))
 from common import IMAGE_NAME, LOG_CONFIG, MIN_JAVA, MAX_JAVA, RANDOM_SEED, TOOLS
 
 RESULTS_CSV = 'results.csv'
+CACHE_DIRS = ['/root/.gradle/caches/modules-2/files-2.1', '/root/.gradle/wrapper/dists',
+              '/root/.m2/repository', '/root/.m2/wrapper',
+              '/root/.ivy2/cache']
 DOCKER_PROJECT_SRC = '/mnt/project'
 
 def run_builds(dataset_dir, results_dir):
@@ -27,16 +30,25 @@ def run_builds(dataset_dir, results_dir):
         writer.writeheader()
 
         for project_dir in project_dirs:
+            volumes = create_cache_volumes()
             project_name = get_project_name(project_dir)
-            result = build_project(project_name, project_dir, results_dir)
+            result = build_project(project_name, project_dir, volumes, results_dir)
             writer.writerow(result)
             out_file.flush()
+            remove_cache_volumes(volumes)
+
+def create_cache_volumes():
+    create_volume = lambda: check_output(['docker', 'volume', 'create']).decode().strip()
+    return {create_volume(): directory for directory in CACHE_DIRS}
+
+def remove_cache_volumes(volumes):
+    run(['docker', 'volume', 'rm'] + list(volumes.keys()), stdout=DEVNULL, check=True)
 
 def get_project_name(project_dir):
     return basename(project_dir).replace('_', '/', 1)
 
-def build_project(project_name, project_dir, results_dir):
-    info('Analyzing ' + project_name)
+def build_project(project_name, project_dir, volumes, results_dir):
+    info('Analyzing %s', project_name)
     commit = get_commit(project_dir)
     tool = detect_tool(project_dir)
     wrapper = detect_wrapper(project_dir, tool)
@@ -46,9 +58,9 @@ def build_project(project_name, project_dir, results_dir):
     java_versions = list(range(MIN_JAVA, MAX_JAVA + 1))
     shuffle(java_versions)
     for java_version in java_versions:
-        info('Building %s with Java %d' % (project_name, java_version))
-        exitcode = build_project_with_java(project_dir, java_version, builder, results_dir)
-        result['java%d' % java_version] = exitcode
+        info('Building %s with Java %d', project_name, java_version)
+        exitcode = build_project_with_java(project_dir, java_version, builder, volumes, results_dir)
+        result[f'java{java_version}'] = exitcode
 
     return result
 
@@ -67,12 +79,17 @@ def detect_wrapper(project_dir, tool):
     else:
         return None
 
-def build_project_with_java(project_dir, java_version, builder, results_dir):
+def build_project_with_java(project_dir, java_version, builder, volumes, results_dir):
     log_path = join(results_dir, basename(project_dir), '%02d' % java_version)
     makedirs(dirname(log_path), exist_ok=True)
+
+    volume_args = []
+    for volume_name, directory in volumes.items():
+        volume_args += ['--mount', f'type=volume,src={volume_name},dst={directory}']
     command = ['docker', 'run', '--rm', '-q',
-               '--mount', 'type=bind,src=%s,dst=%s,readonly' % (project_dir, DOCKER_PROJECT_SRC),
-               '%s:%d' % (IMAGE_NAME, java_version), builder]
+               '--mount', f'type=bind,src={project_dir},dst={DOCKER_PROJECT_SRC},readonly',
+               *volume_args,
+               f'{IMAGE_NAME}:{java_version}', builder]
 
     with open(log_path, 'w') as log_file:
         exitcode = run(command, stdin=DEVNULL, stdout=log_file, stderr=STDOUT, bufsize=0).returncode
