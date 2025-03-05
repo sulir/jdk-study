@@ -24,7 +24,7 @@ def build_all_images():
     basicConfig(**LOG_CONFIG | {'format': '\n%s\n' % LOG_CONFIG['format']})
 
     for java_version in range(MIN_JAVA, MAX_JAVA + 1):
-        info("Building image for Java %d" % java_version)
+        info("Building image for Java %d", java_version)
         if not build_image(java_version):
             exit(1)
 
@@ -34,7 +34,7 @@ def build_image(java_version):
         version = get_version(software, java_version)
         command += '--build-arg', '%s=%s' % (software.upper(), version)
     context_dir = dirname(realpath(__file__))
-    command += '--tag', '%s:%d' % (IMAGE_NAME, java_version), context_dir
+    command += '--tag', f'{IMAGE_NAME}:{java_version}', context_dir
 
     return spawn(command) == 0
 
