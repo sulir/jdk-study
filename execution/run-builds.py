@@ -16,7 +16,8 @@ def run_builds(dataset_dir, results_dir):
     basicConfig(**LOG_CONFIG)
     seed(RANDOM_SEED)
 
-    project_dirs = [file.path for file in scandir(dataset_dir) if file.is_dir()]
+    project_dirs = sorted([file.path for file in scandir(dataset_dir) if file.is_dir()])
+    shuffle(project_dirs)
     makedirs(results_dir, exist_ok=True)
 
     with open(join(results_dir, RESULTS_CSV), 'w') as out_file:
