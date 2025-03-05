@@ -1,4 +1,8 @@
 from collections import namedtuple
+from logging import INFO
+
+LOG_CONFIG = {'level': INFO, 'format': '[%(asctime)s][%(levelname)s] %(message)s', 'datefmt': '%Y-%m-%d %H:%M:%S'}
+RANDOM_SEED = 4321
 
 Tool = namedtuple('Tool', ['name', 'files', 'command', 'wrapper'])
 TOOLS = [Tool('Gradle', ['build.gradle', 'build.gradle.kts'], 'gradle', 'gradlew'),

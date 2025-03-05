@@ -1,14 +1,15 @@
 #!/usr/bin/env python3
 from csv import DictReader
+from logging import basicConfig, error, info
 from os import walk
 from os.path import abspath, basename, dirname, isfile, join
-from random import shuffle
+from random import seed, shuffle
 from re import fullmatch
 from shutil import rmtree
 from subprocess import CalledProcessError, check_output, DEVNULL, run
 from sys import argv, path
 path.insert(1, dirname(dirname(abspath(__file__))))
-from common import TOOLS
+from common import RANDOM_SEED, TOOLS, LOG_CONFIG
 
 PROJECT_COUNT = 2500
 GIT_URL = 'https://github.com/%s.git'
@@ -16,13 +17,16 @@ EXCLUDE = [[r'.*\.java', r'\s*import\s+(javax\.microedition|(com\.(google\.)?)?a
            [r'AndroidManifest\.xml', r'.*']]
 
 def create_dataset(github_csv, output_dir):
+    basicConfig(**LOG_CONFIG)
+    seed(RANDOM_SEED)
+
     with open(github_csv) as in_file:
         reader = DictReader(in_file)
         projects = [row for row in reader if row['license'] != 'Other']
         shuffle(projects)
+
         included = 0
         hashes = set()
-
         for project in projects:
             if create_project(project, output_dir, hashes):
                 included += 1
@@ -32,7 +36,7 @@ def create_dataset(github_csv, output_dir):
                 delete_project(project, output_dir)
 
 def create_project(project, output_dir, hashes):
-    print(project['name'])
+    info("Cloning " + project['name'])
     project_dir = clone_repo(project, output_dir)
     return (project_dir is not None
             and has_tool(project_dir)
@@ -86,7 +90,7 @@ def file_matches(file, name, content):
                 if any(fullmatch(content, line.rstrip()) for line in f):
                     return True
         except FileNotFoundError as e:
-            print(e)
+            error(e)
             return True
     return False
 

@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
+from logging import info, basicConfig
 from os.path import dirname, realpath, abspath
 from pty import spawn
 from sys import exit, path
 path.insert(1, dirname(dirname(abspath(__file__))))
-from common import MIN_JAVA, MAX_JAVA, IMAGE_NAME
+from common import IMAGE_NAME, MIN_JAVA, MAX_JAVA, LOG_CONFIG
 
 VERSIONS = {
     'Zulu': {6: '6.22.0.3', 7: '7.56.0.11', 8: '8.84.0.15', 9: '9.0.7.1', 10: '10.3.5', 11: '11.78.15',
@@ -20,8 +21,10 @@ VERSIONS = {
 }
 
 def build_all_images():
+    basicConfig(**LOG_CONFIG | {'format': '\n%s\n' % LOG_CONFIG['format']})
+
     for java_version in range(MIN_JAVA, MAX_JAVA + 1):
-        print(f"\nBuilding image for Java {java_version}...\n")
+        info("Building image for Java %d" % java_version)
         if not build_image(java_version):
             exit(1)
 

@@ -1,13 +1,17 @@
 #!/usr/bin/env python3
 from os import scandir, renames
-from os.path import basename
+from os.path import abspath, basename, dirname
 from os.path import join
-from random import shuffle
-from sys import argv
+from random import seed, shuffle
+from sys import argv, path
+path.insert(1, dirname(dirname(abspath(__file__))))
+from common import RANDOM_SEED
 
 PART_DIR = 'projects%d'
 
 def split_dataset(dataset_dir, num_parts):
+    seed(RANDOM_SEED)
+
     projects = [file.path for file in scandir(dataset_dir) if file.is_dir()]
     shuffle(projects)
     parts = [join(dataset_dir, PART_DIR % i) for i in range(1, int(num_parts) + 1)]
