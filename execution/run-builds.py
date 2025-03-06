@@ -4,8 +4,10 @@ from logging import basicConfig, info
 from os import scandir, makedirs, rename
 from os.path import abspath, basename, dirname, isfile, join
 from random import seed, shuffle
+from re import sub
 from subprocess import DEVNULL, check_output, run, STDOUT
 from sys import argv, path
+from zlib import crc32
 path.insert(1, dirname(dirname(abspath(__file__))))
 from common import IMAGE_NAME, LOG_CONFIG, MIN_JAVA, MAX_JAVA, RANDOM_SEED, TOOLS
 
@@ -18,6 +20,7 @@ DOCKER_PROJECT_SRC = '/mnt/project'
 def run_builds(dataset_dir, results_dir):
     basicConfig(**LOG_CONFIG)
     seed(RANDOM_SEED)
+    remove_cache_volumes()
 
     project_dirs = sorted([file.path for file in scandir(dataset_dir) if file.is_dir()])
     shuffle(project_dirs)
@@ -30,24 +33,26 @@ def run_builds(dataset_dir, results_dir):
         writer.writeheader()
 
         for project_dir in project_dirs:
-            volumes = create_cache_volumes()
             project_name = get_project_name(project_dir)
-            result = build_project(project_name, project_dir, volumes, results_dir)
+            result = build_project(project_name, project_dir, results_dir)
             writer.writerow(result)
             out_file.flush()
-            remove_cache_volumes(volumes)
+            remove_cache_volumes()
 
-def create_cache_volumes():
-    create_volume = lambda: check_output(['docker', 'volume', 'create']).decode().strip()
-    return {create_volume(): directory for directory in CACHE_DIRS}
+def remove_cache_volumes():
+    for cache_dir in CACHE_DIRS:
+        volume = get_volume_name(cache_dir)
+        if run(['docker', 'volume', 'inspect', volume], stdout=DEVNULL, stderr=DEVNULL).returncode == 0:
+            run(['docker', 'volume', 'rm', volume], stdout=DEVNULL, check=True)
 
-def remove_cache_volumes(volumes):
-    run(['docker', 'volume', 'rm'] + list(volumes.keys()), stdout=DEVNULL, check=True)
+def get_volume_name(cache_dir):
+    name = sub(r'\W+', '_', IMAGE_NAME + cache_dir)
+    return '%s_%08x' % (name, crc32(name.encode()))
 
 def get_project_name(project_dir):
     return basename(project_dir).replace('_', '/', 1)
 
-def build_project(project_name, project_dir, volumes, results_dir):
+def build_project(project_name, project_dir, results_dir):
     info('Analyzing %s', project_name)
     commit = get_commit(project_dir)
     tool = detect_tool(project_dir)
@@ -59,7 +64,7 @@ def build_project(project_name, project_dir, volumes, results_dir):
     shuffle(java_versions)
     for java_version in java_versions:
         info('Building %s with Java %d', project_name, java_version)
-        exitcode = build_project_with_java(project_dir, java_version, builder, volumes, results_dir)
+        exitcode = build_project_with_java(project_dir, java_version, builder, results_dir)
         result[f'java{java_version}'] = exitcode
 
     return result
@@ -79,18 +84,17 @@ def detect_wrapper(project_dir, tool):
     else:
         return None
 
-def build_project_with_java(project_dir, java_version, builder, volumes, results_dir):
-    log_path = join(results_dir, basename(project_dir), '%02d' % java_version)
-    makedirs(dirname(log_path), exist_ok=True)
-
+def build_project_with_java(project_dir, java_version, builder, results_dir):
     volume_args = []
-    for volume_name, directory in volumes.items():
-        volume_args += ['--mount', f'type=volume,src={volume_name},dst={directory}']
+    for cache_dir in CACHE_DIRS:
+        volume_args += ['--mount', 'type=volume,src=%s,dst=%s' % (get_volume_name(cache_dir), cache_dir)]
     command = ['docker', 'run', '--rm', '-q',
                '--mount', f'type=bind,src={project_dir},dst={DOCKER_PROJECT_SRC},readonly',
                *volume_args,
                f'{IMAGE_NAME}:{java_version}', builder]
 
+    log_path = join(results_dir, basename(project_dir), '%02d' % java_version)
+    makedirs(dirname(log_path), exist_ok=True)
     with open(log_path, 'w') as log_file:
         exitcode = run(command, stdin=DEVNULL, stdout=log_file, stderr=STDOUT, bufsize=0).returncode
 
