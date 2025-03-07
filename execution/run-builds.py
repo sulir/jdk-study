@@ -4,8 +4,9 @@ from logging import basicConfig, info
 from pathlib import Path
 from random import seed, shuffle
 from re import sub
+from signal import SIGINT, signal, SIGTERM
 from subprocess import DEVNULL, check_output, run, STDOUT
-from sys import argv, path
+from sys import argv, exit, path
 from zlib import crc32
 path.insert(1, str(Path(__file__).resolve().parent.parent))
 from common import IMAGE_NAME, LOG_CONFIG, MIN_JAVA, MAX_JAVA, RANDOM_SEED, TOOLS
@@ -18,6 +19,8 @@ DOCKER_PROJECT_SRC = '/mnt/project'
 
 def run_builds(dataset_dir, results_dir):
     basicConfig(**LOG_CONFIG)
+    for sig in (SIGINT, SIGTERM):
+        signal(sig, handle_exit)
     remove_cache_volumes()
     results_dir.mkdir(parents=True, exist_ok=True)
     (results_dir / RESULTS_CSV).touch()
@@ -108,12 +111,10 @@ def detect_wrapper(project_dir, tool):
         return None
 
 def build_project_with_java(project_dir, java_version, builder, log_dir):
-    volume_args = []
-    for cache_dir in CACHE_DIRS:
-        volume_args += ['--mount', 'type=volume,src=%s,dst=%s' % (get_volume_name(cache_dir), cache_dir)]
-    command = ['docker', 'run', '--rm', '-q',
-               '--mount', f'type=bind,src={project_dir},dst={DOCKER_PROJECT_SRC},readonly',
-               *volume_args,
+    volumes = [f'--mount=type=volume,src={get_volume_name(cache)},dst={cache}' for cache in CACHE_DIRS]
+    command = ['docker', 'run', '--rm', '--quiet', f'--name={get_container_name()}',
+               f'--mount=type=bind,src={project_dir},dst={DOCKER_PROJECT_SRC},readonly',
+               *volumes,
                f'{IMAGE_NAME}:{java_version}', builder]
 
     log = log_dir / ('%02d' % java_version)
@@ -122,6 +123,13 @@ def build_project_with_java(project_dir, java_version, builder, log_dir):
 
     log.rename(log.with_suffix('.pass' if exitcode == 0 else '.fail'))
     return exitcode
+
+def get_container_name():
+    return IMAGE_NAME.replace('/', '_') + '_container'
+
+def handle_exit(*_):
+    run(['docker', 'stop', '--timeout=1', get_container_name()], stdout=DEVNULL, stderr=DEVNULL)
+    exit(1)
 
 if __name__ == '__main__':
     if len(argv) == 3:
