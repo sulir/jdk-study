@@ -9,40 +9,33 @@ from subprocess import DEVNULL, check_output, run, STDOUT
 from sys import argv, exit, path
 from zlib import crc32
 path.insert(1, str(Path(__file__).resolve().parent.parent))
-from common import IMAGE_NAME, LOG_CONFIG, MIN_JAVA, MAX_JAVA, RANDOM_SEED, TOOLS
+from common import IMAGE_NAME, LOG_CONFIG, MAX_JAVA, MIN_JAVA, RANDOM_SEED, RESULTS_CSV, TOOLS
 
-RESULTS_CSV = 'results.csv'
 CACHE_DIRS = ['/root/.gradle/caches/modules-2/files-2.1', '/root/.gradle/wrapper/dists',
               '/root/.m2/repository', '/root/.m2/wrapper',
               '/root/.ivy2/cache']
 DOCKER_PROJECT_SRC = '/mnt/project'
 
 def run_builds(dataset_dir, results_dir):
-    basicConfig(**LOG_CONFIG)
-    for sig in (SIGINT, SIGTERM):
-        signal(sig, handle_exit)
-    remove_cache_volumes()
-    results_dir.mkdir(parents=True, exist_ok=True)
-    (results_dir / RESULTS_CSV).touch()
+    initialize()
+    csv_fields = ['name', 'commit', 'tool', 'wrapper'] + [f'java{v}' for v in range(MIN_JAVA, MAX_JAVA + 1)]
+    results_csv = prepare_results_csv(results_dir, csv_fields)
+    project_dirs = list_pending_projects(dataset_dir, results_csv)
 
-    project_dirs = sorted([file for file in dataset_dir.iterdir() if file.is_dir()])
-    seed(RANDOM_SEED)
-    shuffle(project_dirs)
-    project_dirs = remaining_projects(project_dirs, results_dir)
-
-    with open(results_dir / RESULTS_CSV, 'a') as out_file:
-        versions_header = ['java%d' % v for v in range(MIN_JAVA, MAX_JAVA + 1)]
-        # noinspection PyTypeChecker
-        writer = DictWriter(out_file, ['name', 'commit', 'tool', 'wrapper'] + versions_header)
-        if out_file.tell() == 0:
-            writer.writeheader()
-
+    with open(results_csv, 'a') as out_file:
+        writer = DictWriter(out_file, csv_fields) # type: ignore
         for project_dir in project_dirs:
             project_name = get_project_name(project_dir)
             result = build_project(project_name, project_dir, results_dir)
             writer.writerow(result)
             out_file.flush()
             remove_cache_volumes()
+
+def initialize():
+    basicConfig(**LOG_CONFIG)
+    for sig in (SIGINT, SIGTERM):
+        signal(sig, handle_exit)
+    remove_cache_volumes()
 
 def remove_cache_volumes():
     for cache_dir in CACHE_DIRS:
@@ -54,8 +47,21 @@ def get_volume_name(cache_dir):
     name = sub(r'\W+', '_', IMAGE_NAME + cache_dir)
     return '%s_%08x' % (name, crc32(name.encode()))
 
-def remaining_projects(project_dirs, results_dir):
-    with open(results_dir / RESULTS_CSV, 'r') as results_file:
+def prepare_results_csv(results_dir, fields):
+    results_dir.mkdir(parents=True, exist_ok=True)
+    csv_path = results_dir / RESULTS_CSV
+    with open(csv_path, 'a') as out_file:
+        writer = DictWriter(out_file, fields) # type: ignore
+        if out_file.tell() == 0:
+            writer.writeheader()
+    return csv_path
+
+def list_pending_projects(dataset_dir, results_csv):
+    project_dirs = sorted([file for file in dataset_dir.iterdir() if file.is_dir()])
+    seed(RANDOM_SEED)
+    shuffle(project_dirs)
+
+    with open(results_csv, 'r') as results_file:
         reader = DictReader(results_file)
         finished = {project['name'] for project in reader}
 

@@ -12,3 +12,4 @@ TOOLS = [Tool('Gradle', ['build.gradle', 'build.gradle.kts'], 'gradle', 'gradlew
 MIN_JAVA = 6
 MAX_JAVA = 23
 IMAGE_NAME = 'sulir/jdk-study'
+RESULTS_CSV = 'results.csv'
