@@ -9,9 +9,11 @@ fi
 cp -r "$PROJECT_SRC/." .
 
 builder=$1
-if [[ $builder == *w ]]; then
-  builder="source ./$builder"
-fi
+
+case "$builder" in
+  gradlew | mvnw | antw)
+    builder="source ./$builder"
+esac
 
 case "$1" in
   gradle | gradlew)

@@ -44,8 +44,9 @@ def remove_cache_volumes():
             run(['docker', 'volume', 'rm', volume], stdout=DEVNULL, check=True)
 
 def get_volume_name(cache_dir):
-    name = sub(r'\W+', '_', IMAGE_NAME + cache_dir)
-    return '%s_%08x' % (name, crc32(name.encode()))
+    user_friendly_name = sub(r'\W+', '_', IMAGE_NAME + cache_dir)
+    collision_prevention = crc32(cache_dir.encode())
+    return '%s_%08x' % (user_friendly_name, collision_prevention)
 
 def prepare_results_csv(results_dir, fields):
     results_dir.mkdir(parents=True, exist_ok=True)
@@ -119,7 +120,7 @@ def detect_wrapper(project_dir, tool):
 def build_project_with_java(project_dir, java_version, builder, log_dir):
     volumes = [f'--mount=type=volume,src={get_volume_name(cache)},dst={cache}' for cache in CACHE_DIRS]
     command = ['docker', 'run', '--rm', '--quiet', f'--name={get_container_name()}',
-               f'--mount=type=bind,src={project_dir},dst={DOCKER_PROJECT_SRC},readonly',
+               f'--mount=type=bind,src={project_dir.resolve()},dst={DOCKER_PROJECT_SRC},readonly',
                *volumes,
                f'{IMAGE_NAME}:{java_version}', builder]
 
