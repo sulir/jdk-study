@@ -1,11 +1,5 @@
 FROM ubuntu:24.04
 
-ENV JAVA_HOME=/opt/java
-ENV ULIMIT_FILES=1048576
-
-ENTRYPOINT ["/bin/sh", "-c", "ulimit -n $ULIMIT_FILES 2>/dev/null; exec \"$@\"", "--"]
-CMD ["/bin/bash"]
-
 RUN apt-get update && apt-get install -y \
     curl \
     unzip \
@@ -35,6 +29,7 @@ RUN curl "https://dlcdn.apache.org/ant/binaries/apache-ant-${ANT:?}-bin.tar.gz" 
     | tar -xzC /opt && \
     ln -s /opt/apache-ivy-*/ivy-*.jar /opt/apache-ant-*/lib/
 
+ENV JAVA_HOME=/opt/java
 ARG ZULU
 ARG JDK
 RUN curl "https://cdn.azul.com/zulu/bin/zulu${ZULU:?}-ca-jdk${JDK:?}-linux_x64.tar.gz" \
@@ -56,3 +51,8 @@ RUN if [ -z "$BOUNCY_CASTLE" ]; then exit 0; fi && \
     providers="security.provider.1=org.bouncycastle.jce.provider.BouncyCastleProvider\n" && \
     providers="${providers}security.provider.2=org.bouncycastle.jsse.provider.BouncyCastleJsseProvider\n" && \
     sed -i "s/^security\.provider\.3=.*/$providers\0/" $file
+
+COPY run-build.sh /app/
+ENTRYPOINT ["/app/run-build.sh"]
+ENV PROJECT_SRC=/mnt/project
+WORKDIR /root/build
