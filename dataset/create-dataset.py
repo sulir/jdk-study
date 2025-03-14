@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 from csv import DictReader
 from logging import basicConfig, error, info
-from os import walk
+from os import environ, walk
 from os.path import abspath, basename, dirname, isfile, join
 from random import seed, shuffle
 from re import fullmatch
@@ -54,7 +54,8 @@ def clone_repo(project, output_dir):
     project_dir = get_project_dir(project, output_dir)
 
     try:
-        run(['git', 'clone', '--depth=1', url, project_dir], stdout=DEVNULL, stderr=DEVNULL, check=True)
+        run(['git', 'clone', '--depth=1', url, project_dir], stdin=DEVNULL, stdout=DEVNULL,
+            stderr=DEVNULL, env=environ | {'GIT_TERMINAL_PROMPT': '0'}, check=True)
         return project_dir
     except CalledProcessError:
         return None
