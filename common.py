@@ -5,7 +5,8 @@ LOG_CONFIG = {'level': INFO, 'format': '[%(asctime)s][%(levelname)s] %(message)s
 RANDOM_SEED = 4321
 
 Tool = namedtuple('Tool', ['name', 'files', 'command', 'wrapper'])
-TOOLS = [Tool('Gradle', ['build.gradle', 'build.gradle.kts'], 'gradle', 'gradlew'),
+TOOLS = [Tool('Gradle', ['build.gradle', 'build.gradle.kts',
+                         'settings.gradle', 'settings.gradle.kts'], 'gradle', 'gradlew'),
          Tool('Maven', ['pom.xml'], 'mvn', 'mvnw'),
          Tool('Ant', ['build.xml'], 'ant', 'antw')]
 
