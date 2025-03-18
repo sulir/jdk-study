@@ -1,12 +1,15 @@
 #!/usr/bin/env bash
 
-ULIMIT_FILES=1048576
+files_limit=1048576
+if [ "$(ulimit -n)" -gt $files_limit ]; then
+  ulimit -n $files_limit || exit 2
+fi
 
 if [ "$(ulimit -n)" -gt $ULIMIT_FILES ]; then
   ulimit -n $ULIMIT_FILES
 fi
 
-cp -r "$PROJECT_SRC/." .
+cp -r "$PROJECT_SRC/." . || exit 2
 
 builder=$1
 
@@ -24,7 +27,7 @@ case "$1" in
     command="$builder clean; $builder jar || $builder war || $builder dist || $builder" ;;
   *)
     echo "Usage: $0 gradle|gradlew|..."
-    exit 1 ;;
+    exit 2
 esac
 
 timeout -k1m 1h bash -c "$command" </dev/null 2>&1
