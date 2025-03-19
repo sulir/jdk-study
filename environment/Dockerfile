@@ -39,18 +39,25 @@ RUN curl "https://cdn.azul.com/zulu/bin/zulu${ZULU:?}-ca-jdk${JDK:?}-linux_x64.t
     trust extract --format=java-cacerts --overwrite $dir/cacerts
 
 ARG BOUNCY_CASTLE
+ENV JAVA_TOOL_OPTIONS=${BOUNCY_CASTLE:+-Dorg.bouncycastle.jsse.client.assumeOriginalHostName=true}
 RUN if [ -z "$BOUNCY_CASTLE" ]; then exit 0; fi && \
     url=https://repo1.maven.org/maven2/org/bouncycastle && \
-    for library in bcprov bcprov-ext bctls; do \
+    for library in bcprov bcutil bctls; do \
       curl "$url/${library}-jdk15to18/$BOUNCY_CASTLE/${library}-jdk15to18-$BOUNCY_CASTLE.jar" \
       > $JAVA_HOME/jre/lib/ext/$library.jar; \
     done && \
     \
     file=$JAVA_HOME/jre/lib/security/java.security && \
     perl -i -pe 's/^(security\.provider\.)(\d+)/$1.($2+2)/eg' $file && \
-    providers="security.provider.1=org.bouncycastle.jce.provider.BouncyCastleProvider\n" && \
+    providers="ssl.SocketFactory.provider=org.bouncycastle.jsse.provider.SSLSocketFactoryImpl\n" && \
+    providers="${providers}security.provider.1=org.bouncycastle.jce.provider.BouncyCastleProvider\n" && \
     providers="${providers}security.provider.2=org.bouncycastle.jsse.provider.BouncyCastleJsseProvider\n" && \
-    sed -i "s/^security\.provider\.3=.*/$providers\0/" $file
+    sed -i "s/^security\.provider\.3=.*/$providers\0/" $file && \
+    sed -i "s/SHA1 jdkCA & usage TLSServer, //" $file && \
+    \
+    for class in PropertyUtils ProvTlsClient; do \
+      echo "org.bouncycastle.jsse.provider.$class.level = WARNING" >> $JAVA_HOME/jre/lib/logging.properties; \
+    done
 
 COPY run-build.sh /app/
 ENTRYPOINT ["/app/run-build.sh"]

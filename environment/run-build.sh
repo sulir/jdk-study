@@ -5,8 +5,8 @@ if [ "$(ulimit -n)" -gt $files_limit ]; then
   ulimit -n $files_limit || exit 2
 fi
 
-if [ "$(ulimit -n)" -gt $ULIMIT_FILES ]; then
-  ulimit -n $ULIMIT_FILES
+if [ -z "$JAVA_TOOL_OPTIONS" ]; then
+  unset JAVA_TOOL_OPTIONS
 fi
 
 cp -r "$PROJECT_SRC/." . || exit 2
