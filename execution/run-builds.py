@@ -9,12 +9,11 @@ from subprocess import DEVNULL, check_output, run, STDOUT
 from sys import argv, exit, path
 from zlib import crc32
 path.insert(1, str(Path(__file__).resolve().parent.parent))
-from common import IMAGE_NAME, LOG_CONFIG, MAX_JAVA, MIN_JAVA, RANDOM_SEED, RESULTS_CSV, TOOLS
+from common import DOCKER_PROJECT_SRC, IMAGE_NAME, LOG_CONFIG, MAX_JAVA, MIN_JAVA, RANDOM_SEED, RESULTS_CSV, TOOLS
 
 CACHE_DIRS = ['/root/.gradle/caches/modules-2/files-2.1', '/root/.gradle/wrapper/dists',
               '/root/.m2/repository', '/root/.m2/wrapper',
               '/root/.ivy2/cache']
-DOCKER_PROJECT_SRC = '/mnt/project'
 
 def run_builds(dataset_dir, results_dir):
     initialize()

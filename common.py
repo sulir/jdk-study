@@ -13,4 +13,5 @@ TOOLS = [Tool('Gradle', ['build.gradle', 'build.gradle.kts',
 MIN_JAVA = 6
 MAX_JAVA = 23
 IMAGE_NAME = 'sulir/jdk-study'
+DOCKER_PROJECT_SRC = '/mnt/project'
 RESULTS_CSV = 'results.csv'
