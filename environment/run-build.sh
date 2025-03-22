@@ -22,9 +22,9 @@ case "$1" in
   gradle | gradlew)
     command="$builder clean assemble --no-daemon --stacktrace --console=plain" ;;
   mvn | mvnw)
-    command="$builder clean package -DskipTests --batch-mode" ;;
+    command="$builder clean package -DskipTests --errors --batch-mode" ;;
   ant | antw)
-    command="$builder clean; $builder jar || $builder war || $builder dist || $builder" ;;
+    command="$builder clean; $builder jar || $builder war || $builder dist || $builder -verbose" ;;
   *)
     echo "Usage: $0 gradle|gradlew|..."
     exit 2
