@@ -1,9 +1,8 @@
 from logging import basicConfig, info
 from pathlib import Path
 from subprocess import DEVNULL, run
-from sys import executable, path
+from sys import executable
 from unittest import main, TestCase
-path.insert(1, str((Path(__file__).parent / '..').resolve()))
 from common import DOCKER_PROJECT_SRC, IMAGE_NAME, LOG_CONFIG, MIN_JAVA, MAX_JAVA, TOOLS
 
 class TestEnvironment(TestCase):
