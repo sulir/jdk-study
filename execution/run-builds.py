@@ -51,9 +51,8 @@ def prepare_results_csv(results_dir, fields):
     results_dir.mkdir(parents=True, exist_ok=True)
     csv_path = results_dir / RESULTS_CSV
     with open(csv_path, 'a') as out_file:
-        writer = DictWriter(out_file, fields) # type: ignore
         if out_file.tell() == 0:
-            writer.writeheader()
+            DictWriter(out_file, fields).writeheader()  # type: ignore
     return csv_path
 
 def list_pending_projects(dataset_dir, results_csv):

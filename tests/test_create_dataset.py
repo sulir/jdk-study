@@ -51,8 +51,9 @@ class TestCreateDataset(TestCase):
         source = Path(__file__).parent / 'delete'
         with TemporaryDirectory() as output_dir:
             copytree(source, output_dir, dirs_exist_ok=True)
-            cd.delete_project({'name': 'owner/repo'}, output_dir)
-            self.assertFalse((Path(output_dir) / 'owner_repo').exists())
+            cd.delete_project({'name': 'to/delete'}, output_dir)
+            self.assertFalse((Path(output_dir) / 'to_delete').exists())
+            self.assertTrue((Path(output_dir) / 'to_keep').exists())
 
     def test_get_project_dir_works_with_absolute_path(self):
         self.assertEqual(cd.get_project_dir({'name': 'owner/repo'}, '/out/dir'), '/out/dir/owner_repo')
