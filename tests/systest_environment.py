@@ -13,7 +13,7 @@ class TestEnvironment(TestCase):
         build_images = (Path(__file__).parent / '..' / 'environment' / 'build-images.py').resolve()
         run([executable, build_images], stdout=DEVNULL, stderr=DEVNULL, check=True)
 
-    def test_tools_should_pass_for_each_java_version(self):
+    def test_tools_pass_for_each_java_version(self):
         for tool in TOOLS:
             info("Testing %s", tool.name)
             build_dir = Path(__file__).parent / 'pass-all' / tool.command
