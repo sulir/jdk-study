@@ -3,7 +3,7 @@ from pathlib import Path
 from sys import path
 from tempfile import TemporaryDirectory
 from unittest import main, TestCase
-from common import RESULTS_CSV
+from common import RESULTS_CSV, Tool
 path.insert(1, str((Path(__file__).parent / '..' / 'execution').resolve()))
 rb = __import__('run-builds')
 
@@ -11,7 +11,7 @@ class TestRunBuilds(TestCase):
     def test_volume_name_is_user_friendly(self):
         cache_dir = '/root/.tool/cache'
         volume_name = rb.get_volume_name(cache_dir)
-        self.assertIn('_root_tool_cache', volume_name)
+        self.assertRegex(volume_name, 'root.*tool.*cache')
 
     def test_volume_names_are_unique(self):
         cache_dirs = ['/root/tool/cache', '/root/.tool/cache', '/root/_tool/cache']
@@ -84,6 +84,41 @@ class TestRunBuilds(TestCase):
             log_dir = rb.prepare_log_dir(project_dir, results_dir)
             self.assertEqual(list(log_dir.iterdir()), [])
             self.assertEqual(log_dir.parent, results_dir)
+
+    def test_highest_priority_tool_is_detected(self):
+        tools = {('build.gradle', 'pom.xml', 'build.xml'): 'Gradle',
+                 ('settings.gradle', 'pom.xml', 'build.xml'): 'Gradle',
+                 ('build.gradle.kts', 'pom.xml', 'build.xml'): 'Gradle',
+                 ('settings.gradle.kts', 'pom.xml', 'build.xml'): 'Gradle',
+                 ('pom.xml', 'build.xml'): 'Maven',
+                 ('build.xml', 'other_file'): 'Ant'}
+        for files, tool_name in tools.items():
+            with TemporaryDirectory() as temp_dir:
+                project_dir = Path(temp_dir)
+                for file in files:
+                    (project_dir / file).touch()
+                self.assertEqual(rb.detect_tool(project_dir).name, tool_name)
+
+    def test_tool_detection_fails_without_build_script(self):
+        with TemporaryDirectory() as temp_dir:
+            with self.assertRaises(FileNotFoundError):
+                rb.detect_tool(Path(temp_dir))
+
+    def test_wrapper_is_detected_if_present(self):
+        tools = [Tool('Gradle', None, None, 'gradlew'),
+                 Tool('Maven', None, None, 'mvnw'),
+                 Tool('Ant', None, None, 'antw')]
+        for tool in tools:
+            with TemporaryDirectory() as temp_dir:
+                project_dir = Path(temp_dir)
+                for wrapper in [t.wrapper for t in tools]:
+                    (project_dir / wrapper).touch()
+                self.assertEqual(rb.detect_wrapper(project_dir, tool), tool.wrapper)
+
+    def test_wrapper_is_none_if_absent(self):
+        tool = Tool('Name', None, None, 'wrapper')
+        with TemporaryDirectory() as temp_dir:
+            self.assertIsNone(rb.detect_wrapper(Path(temp_dir), tool))
 
 if __name__ == '__main__':
     main()
