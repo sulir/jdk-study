@@ -122,7 +122,7 @@ def build_project_with_java(project_dir, java_version, builder, log_dir):
                *volumes,
                f'{IMAGE_NAME}:{java_version}', builder]
 
-    log = log_dir / ('%02d' % java_version)
+    log = log_dir / f'{java_version:02d}'
     with open(log, 'w') as log_file:
         exitcode = run(command, stdin=DEVNULL, stdout=log_file, stderr=STDOUT, bufsize=0).returncode
 
