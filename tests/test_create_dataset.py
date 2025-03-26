@@ -4,7 +4,6 @@ from shutil import copytree
 from sys import path
 from tempfile import TemporaryDirectory
 from unittest import main, TestCase
-from common import TOOLS
 path.insert(1, str((Path(__file__).parent / '..' / 'dataset').resolve()))
 cd = __import__('create-dataset')
 
@@ -23,7 +22,7 @@ class TestCreateDataset(TestCase):
                     'import  android.view.View;',
                     'import android.view.View; // comment']
         for line in matching:
-            self.assertIsNotNone(fullmatch(self.java_regex, line))
+            self.assertIsNotNone(fullmatch(self.java_regex, line), f"{line} failed to match")
 
     def test_java_exclusion_regex_matches_javame(self):
         matching = ['import javax.microedition.midlet.MIDlet;'
@@ -33,7 +32,7 @@ class TestCreateDataset(TestCase):
                     'import  javax.microedition.lcdui.Form;',
                     'import javax.microedition.lcdui.Form; // comment']
         for line in matching:
-            self.assertIsNotNone(fullmatch(self.java_regex, line))
+            self.assertIsNotNone(fullmatch(self.java_regex, line), f"{line} failed to match")
 
     def test_java_exclusion_regex_does_not_match_other(self):
         non_matching = ['import java.io.File;',
@@ -45,7 +44,7 @@ class TestCreateDataset(TestCase):
                         '"import android.app.Activity;"',
                         '//import javax.microedition.midlet.MIDlet;']
         for line in non_matching:
-            self.assertIsNone(fullmatch(self.java_regex, line))
+            self.assertIsNone(fullmatch(self.java_regex, line), f"{line} matched")
 
     def test_delete_project_deletes_directory(self):
         source = Path(__file__).parent / 'delete'
@@ -68,14 +67,19 @@ class TestCreateDataset(TestCase):
         self.assertEqual(cd.get_project_dir({'name': 'ow-ner/_r-e.p0'}, 'out/'), 'out/ow-ner__r-e.p0')
 
     def test_build_config_is_detected(self):
-        for tool in TOOLS:
-            with self.subTest(tool=tool.name):
-                project_dir = Path(__file__).parent / 'pass-all' / tool.command
-                self.assertTrue(cd.has_tool(project_dir))
+        files = ['build.gradle', 'build.gradle.kts', 'settings.gradle', 'settings.gradle.kts',
+                 'pom.xml', 'build.xml']
+        for file in files:
+            with TemporaryDirectory() as project_dir:
+                (Path(project_dir) / file).touch()
+                self.assertTrue(cd.has_tool(project_dir), f"Tool not detected for {file}")
 
     def test_build_config_in_subdir_is_ignored(self):
-        parent_dir = Path(__file__).parent / 'pass-all'
-        self.assertFalse(cd.has_tool(parent_dir))
+        with TemporaryDirectory() as project_dir:
+            subdir = Path(project_dir) / 'subdir'
+            subdir.mkdir()
+            (subdir / 'build.xml').touch()
+            self.assertFalse(cd.has_tool(project_dir))
 
     def test_excluded_technologies_are_excluded(self):
         projects = Path(__file__).parent / 'exclude'

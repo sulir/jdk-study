@@ -97,7 +97,8 @@ class TestRunBuilds(TestCase):
                 project_dir = Path(temp_dir)
                 for file in files:
                     (project_dir / file).touch()
-                self.assertEqual(rb.detect_tool(project_dir).name, tool_name)
+                self.assertEqual(rb.detect_tool(project_dir).name, tool_name,
+                                 f"Detection failed for {files}")
 
     def test_tool_detection_fails_without_build_script(self):
         with TemporaryDirectory() as temp_dir:
