@@ -69,8 +69,9 @@ class TestCreateDataset(TestCase):
 
     def test_build_config_is_detected(self):
         for tool in TOOLS:
-            project_dir = Path(__file__).parent / 'pass-all' / tool.command
-            self.assertTrue(cd.has_tool(project_dir))
+            with self.subTest(tool=tool.name):
+                project_dir = Path(__file__).parent / 'pass-all' / tool.command
+                self.assertTrue(cd.has_tool(project_dir))
 
     def test_build_config_in_subdir_is_ignored(self):
         parent_dir = Path(__file__).parent / 'pass-all'
