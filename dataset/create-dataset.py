@@ -68,12 +68,12 @@ def has_tool(project_dir):
 
 def project_is_duplicate(project_dir, hashes):
     command = 'git ls-files --format="%(objectname) %(path)" | git hash-object --stdin'
-    project_hash = check_output(command, shell=True, cwd=project_dir).decode()
+    project_hash = check_output(command, shell=True, cwd=project_dir).decode().strip()
 
     if project_hash in hashes:
         return True
     else:
-        hashes.add(hash)
+        hashes.add(project_hash)
         return False
 
 def project_has_excluded_technology(project_dir):

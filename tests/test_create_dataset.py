@@ -1,6 +1,7 @@
 from pathlib import Path
 from re import fullmatch
 from shutil import copytree
+from subprocess import run
 from sys import path
 from tempfile import TemporaryDirectory
 from unittest import main, TestCase
@@ -80,6 +81,28 @@ class TestCreateDataset(TestCase):
             subdir.mkdir()
             (subdir / 'build.xml').touch()
             self.assertFalse(cd.has_tool(project_dir))
+
+    def test_project_duplicate_is_detected(self):
+        hashes = set()
+        project = Path(__file__).parent / 'duplicate' / 'project_1'
+        with self.create_git_repo(project) as repo, self.create_git_repo(project) as duplicate:
+            self.assertFalse(cd.project_is_duplicate(repo, hashes))
+            self.assertTrue(cd.project_is_duplicate(duplicate, hashes))
+
+    def test_distinct_projects_are_undetected(self):
+        hashes = set()
+        project1 = Path(__file__).parent / 'duplicate' / 'project_1'
+        project2 = Path(__file__).parent / 'duplicate' / 'project_2'
+        with self.create_git_repo(project1) as repo, self.create_git_repo(project2) as distinct:
+            self.assertFalse(cd.project_is_duplicate(repo, hashes))
+            self.assertFalse(cd.project_is_duplicate(distinct, hashes))
+
+    @staticmethod
+    def create_git_repo(project):
+        repo = TemporaryDirectory()
+        copytree(project, repo.name, dirs_exist_ok=True)
+        run('git init && git add . && git commit -m test', shell=True, cwd=repo.name, check=True)
+        return repo
 
     def test_excluded_technologies_are_excluded(self):
         projects = Path(__file__).parent / 'exclude'
