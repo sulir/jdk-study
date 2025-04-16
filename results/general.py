@@ -1,51 +1,15 @@
-# ---
-# jupyter:
-#   jupytext:
-#     text_representation:
-#       extension: .py
-#       format_name: percent
-#       format_version: '1.3'
-#       jupytext_version: 1.17.0
-#   kernelspec:
-#     display_name: .venv
-#     language: python
-#     name: python3
-# ---
+import marimo
 
-# %% [markdown]
-# ## Main hypothesis and RQ1
+__generated_with = "0.12.9"
+app = marimo.App(width="medium")
 
-# %%
-from pandas import read_csv
-from pymannkendall import original_test
-# %run ../common.py
 
-# %% tags=["parameters"]
-results_file = read_arg('results_file', "Enter path to results CSV file:")
+@app.cell
+def _():
+    import marimo as mo
 
-# %%
-results = read_csv(results_file)
-results
+    return (mo,)
 
-# %%
-def get_build_outcomes(results):
-    outcomes = results.filter(regex='^java')
-    outcomes.columns = outcomes.columns.str.removeprefix('java')
-    return outcomes == 0
 
-outcomes = get_build_outcomes(results)
-outcomes
-
-# %% [markdown]
-# **RQ1:** What proportion of projects is buildable by their supplied script, using Java Development Kit versions ranging from 6 to 23?
-
-# %%
-success_rates = outcomes.mean()
-print(success_rates.to_string())
-
-# %% [markdown]
-# **H:** With increasing JDK version numbers, the proportion of build-failing projects tends to grow.
-
-# %%
-mann_kendall = original_test(success_rates)
-print(f"p-value: {mann_kendall.p}, trend: {mann_kendall.trend}")
+if __name__ == "__main__":
+    app.run()
