@@ -1,6 +1,6 @@
 .idea/
 .ipynb_checkpoints/
+.pytest_cache/
 [.]venv
-.vscode
+.vscode/
 __pycache__/
-/results/*.ipynb
