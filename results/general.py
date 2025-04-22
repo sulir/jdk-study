@@ -5,15 +5,7 @@ import marimo
 __generated_with = "0.13.0"
 app = marimo.App(width="medium")
 
-
-@app.cell(hide_code=True)
-def _(mo):
-    mo.md(r"""# General Results: RQ1 and H""")
-    return
-
-
-@app.cell(hide_code=True)
-def _():
+with app.setup:
     import marimo as mo
     from altair import Chart, Color, Scale, Text, X, Y
     from marimo import md, running_in_notebook, stop, ui
@@ -21,49 +13,25 @@ def _():
     from pandas.testing import assert_frame_equal
     from pathlib import Path
     from pymannkendall import original_test
-    from sys import argv, exit, stderr
-    from helpers import RESULTS_CSV
-    return (
-        Chart,
-        Color,
-        DataFrame,
-        Path,
-        RESULTS_CSV,
-        Scale,
-        Text,
-        X,
-        Y,
-        argv,
-        assert_frame_equal,
-        exit,
-        md,
-        mo,
-        original_test,
-        read_csv,
-        running_in_notebook,
-        stderr,
-        stop,
-        ui,
-    )
+    from sys import argv, exit, path, stderr
+    path.insert(1, str(Path(globals()['__file__']).resolve().parent / '..'))
+    from common import RESULTS_CSV
 
 
 @app.cell(hide_code=True)
-def _(RESULTS_CSV, md):
+def _():
+    mo.md(r"""# General Results: RQ1 and H""")
+    return
+
+
+@app.cell(hide_code=True)
+def _():
     md(f"The notebook requires `{RESULTS_CSV}` and an output directory for writing chart(s).")
     return
 
 
 @app.cell
-def _(
-    Path,
-    RESULTS_CSV,
-    __file__,
-    argv,
-    exit,
-    running_in_notebook,
-    stderr,
-    stop,
-):
+def _(__file__):
     if len(argv) == 3:
         results_dir = Path(argv[1])
         results_csv = results_dir / RESULTS_CSV
@@ -75,43 +43,43 @@ def _(
 
 
 @app.cell
-def _(read_csv, results_csv):
-    results = read_csv(results_csv).sort_values('name')
+def _(results_csv):
+    results = read_csv(results_csv)
     results
     return (results,)
 
 
 @app.cell(hide_code=True)
-def _(mo):
+def _():
     mo.md(r"""This is the main data frame with build outcomes that will be necessary for multiple research questions:""")
     return
 
 
+@app.function
+def get_build_outcomes(results):
+    outcomes = results.filter(regex='^java')
+    outcomes.columns = outcomes.columns.str.removeprefix('java')
+    outcomes = outcomes == 0
+    outcomes.insert(0, 'name', results['name'])
+    return outcomes
+
+
 @app.cell
 def _(results):
-    def get_build_outcomes(results):
-        outcomes = results.filter(regex='^java')
-        outcomes.columns = outcomes.columns.str.removeprefix('java')
-        outcomes = outcomes == 0
-        outcomes.insert(0, 'name', results['name'])
-        return outcomes
-
     outcomes = get_build_outcomes(results)
     outcomes
-    return get_build_outcomes, outcomes
+    return (outcomes,)
 
 
-@app.cell
-def _(DataFrame, assert_frame_equal, get_build_outcomes):
-    def test_build_outcomes():
-        sample_results = DataFrame({'name': ['p/1', 'p/2'], 'java6': [0, 1], 'java7': [1, 0]})
-        expected = DataFrame({'name': ['p/1', 'p/2'], '6': [True, False], '7': [False, True]})
-        assert_frame_equal(get_build_outcomes(sample_results), expected)
-    return
+@app.function
+def test_build_outcomes():
+    sample_results = DataFrame({'name': ['p/1', 'p/2'], 'java6': [0, 1], 'java7': [1, 0]})
+    expected = DataFrame({'name': ['p/1', 'p/2'], '6': [True, False], '7': [False, True]})
+    assert_frame_equal(get_build_outcomes(sample_results), expected)
 
 
 @app.cell(hide_code=True)
-def _(mo):
+def _():
     mo.md(
         r"""
         ## **RQ1:** What proportion of projects is buildable by their supplied script, using Java Development Kit versions ranging from 6 to 23?
@@ -123,7 +91,7 @@ def _(mo):
 
 
 @app.cell
-def _(DataFrame, outcomes):
+def _(outcomes):
     outcome_values = outcomes.drop('name', axis='columns')
     rates = DataFrame({
         "Java version": outcome_values.columns.map(int),
@@ -136,7 +104,7 @@ def _(DataFrame, outcomes):
 
 
 @app.cell(hide_code=True)
-def _(mo):
+def _():
     mo.md(r"""Next, we transform the outcomes to [long-form data](https://altair-viz.github.io/user_guide/data.html#long-form-vs-wide-form-data), which is a format that many visualization libraries expect.""")
     return
 
@@ -149,13 +117,13 @@ def _(rates):
 
 
 @app.cell(hide_code=True)
-def _(mo):
+def _():
     mo.md(r"""Finally, we plot the build success and failure rates as a stacked bar chart:""")
     return
 
 
 @app.cell
-def _(Chart, Color, Scale, Text, X, Y, output_dir, rates_long, ui):
+def _(output_dir, rates_long):
     outcome_scale = Scale(
         domain=["failure", "success"],
         range=['#D2836F', '#4F9D69'])
@@ -182,7 +150,7 @@ def _(Chart, Color, Scale, Text, X, Y, output_dir, rates_long, ui):
 
 
 @app.cell(hide_code=True)
-def _(mo):
+def _():
     mo.md(
         r"""
         ## **H:** With increasing JDK version numbers, the proportion of build-failing projects tends to grow.
@@ -194,7 +162,7 @@ def _(mo):
 
 
 @app.cell
-def _(md, original_test, rates):
+def _(rates):
     mann_kendall = original_test(rates['success'])
     md(f"The p-value is **{mann_kendall.p:.4f}**.\n\nThe type of the trend is: **{mann_kendall.trend}**.")
     return
