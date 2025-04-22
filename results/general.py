@@ -40,7 +40,7 @@ def _(__file__):
 
 @app.function
 def get_results(results_csv):
-    return read_csv(results_csv).sort_values('name')
+    return read_csv(results_csv).set_index('name').sort_index()
 
 
 @app.cell
@@ -62,8 +62,6 @@ def get_outcomes(results):
     outcomes.columns = outcomes.columns.str.removeprefix('java')
     exit_success = 0
     outcomes = outcomes == exit_success
-    outcomes.insert(0, 'name', results['name'])
-    outcomes.set_index('name', inplace=True)
     return outcomes
 
 
@@ -77,6 +75,7 @@ def _(results):
 @app.function
 def test_outcomes_reflect_exit_codes():
     sample_results = DataFrame({'name': ['p/1', 'p/2'], 'java6': [0, 1], 'java7': [1, 0]})
+    sample_results.set_index('name', inplace=True)
     expected = DataFrame({'name': ['p/1', 'p/2'], '6': [True, False], '7': [False, True]})
     expected.set_index('name', inplace=True)
     assert_frame_equal(get_outcomes(sample_results), expected)
