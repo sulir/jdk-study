@@ -7,7 +7,7 @@ app = marimo.App(width="medium")
 
 with app.setup:
     import marimo as mo
-    from altair import Chart, Color, Scale, Text, X, Y
+    from altair import Chart, Color, Scale, Text, Y
     from marimo import md, running_in_notebook, stop, ui
     from pandas import DataFrame, read_csv
     from pandas.testing import assert_frame_equal
@@ -24,12 +24,6 @@ def _():
     return
 
 
-@app.cell(hide_code=True)
-def _():
-    md(f"The notebook requires `{RESULTS_CSV}` and an output directory for writing chart(s).")
-    return
-
-
 @app.cell
 def _(__file__):
     if len(argv) == 3:
@@ -39,12 +33,19 @@ def _(__file__):
     else:
         print(f"Usage: [python|marimo edit] {Path(__file__).name} results_dir output_dir", file=stderr)
         stop(True) if running_in_notebook() else exit(1)
+
+    md(f"The notebook uses `{RESULTS_CSV}` and an output directory for writing chart(s).")
     return output_dir, results_csv
+
+
+@app.function
+def get_results(results_csv):
+    return read_csv(results_csv).sort_values('name')
 
 
 @app.cell
 def _(results_csv):
-    results = read_csv(results_csv)
+    results = get_results(results_csv)
     results
     return (results,)
 
@@ -56,26 +57,29 @@ def _():
 
 
 @app.function
-def get_build_outcomes(results):
+def get_outcomes(results):
     outcomes = results.filter(regex='^java')
     outcomes.columns = outcomes.columns.str.removeprefix('java')
-    outcomes = outcomes == 0
+    exit_success = 0
+    outcomes = outcomes == exit_success
     outcomes.insert(0, 'name', results['name'])
+    outcomes.set_index('name', inplace=True)
     return outcomes
 
 
 @app.cell
 def _(results):
-    outcomes = get_build_outcomes(results)
+    outcomes = get_outcomes(results)
     outcomes
     return (outcomes,)
 
 
 @app.function
-def test_build_outcomes():
+def test_outcomes_reflect_exit_codes():
     sample_results = DataFrame({'name': ['p/1', 'p/2'], 'java6': [0, 1], 'java7': [1, 0]})
     expected = DataFrame({'name': ['p/1', 'p/2'], '6': [True, False], '7': [False, True]})
-    assert_frame_equal(get_build_outcomes(sample_results), expected)
+    expected.set_index('name', inplace=True)
+    assert_frame_equal(get_outcomes(sample_results), expected)
 
 
 @app.cell(hide_code=True)
@@ -90,15 +94,18 @@ def _():
     return
 
 
+@app.function
+def get_rates(outcomes):
+    return DataFrame({
+        "Java version": outcomes.columns.map(int),
+        "success": outcomes.mean() * 100,
+        "failure": (1 - outcomes.mean()) * 100
+    }).sort_values("Java version")
+
+
 @app.cell
 def _(outcomes):
-    outcome_values = outcomes.drop('name', axis='columns')
-    rates = DataFrame({
-        "Java version": outcome_values.columns.map(int),
-        "success": outcome_values.mean(),
-        "failure": 1 - outcome_values.mean()
-    }).sort_values("Java version")
-    rates[["success", "failure"]] *= 100
+    rates = get_rates(outcomes)
     rates
     return (rates,)
 
@@ -128,7 +135,7 @@ def _(output_dir, rates_long):
         domain=["failure", "success"],
         range=['#D2836F', '#4F9D69'])
     rates_bars = Chart(rates_long).mark_bar().encode(
-        x=X("Java version:N"),
+        x="Java version:N",
         y=Y("Rate", title="Projects (%)", scale=Scale(domain=[0, 100])),
         color=Color("Outcome", scale=outcome_scale)
     ).properties(width=600, height=200)
@@ -161,10 +168,16 @@ def _():
     return
 
 
+@app.function
+def compute_trend(rates):
+    mann_kendall = original_test(rates['failure'])
+    return mann_kendall
+
+
 @app.cell
 def _(rates):
-    mann_kendall = original_test(rates['success'])
-    md(f"The p-value is **{mann_kendall.p:.4f}**.\n\nThe type of the trend is: **{mann_kendall.trend}**.")
+    h_result = compute_trend(rates)
+    md(f"The p-value is **{h_result.p:.4f}**.\n\nThe type of the trend is: **{h_result.trend}**.")
     return
 
 
