@@ -8,14 +8,14 @@ app = marimo.App(width="medium")
 with app.setup:
     import marimo as mo
     from altair import Chart, Color, Scale, Text, Y
-    from marimo import md, running_in_notebook, stop, ui
+    from marimo import md, ui
     from pandas import DataFrame, read_csv
     from pandas.testing import assert_frame_equal
     from pathlib import Path
     from pymannkendall import original_test
-    from sys import argv, exit, path, stderr
+    from sys import path
     path.insert(1, str(Path(globals()['__file__']).resolve().parent / '..'))
-    from common import RESULTS_CSV
+    from common import exit_notebook, require_path_args, RESULTS_CSV
 
 
 @app.cell(hide_code=True)
@@ -25,16 +25,12 @@ def _():
 
 
 @app.cell
-def _(__file__):
-    if len(argv) == 3:
-        results_dir = Path(argv[1])
-        results_csv = results_dir / RESULTS_CSV
-        output_dir = Path(argv[2])
-    else:
-        print(f"Usage: [python|marimo edit] {Path(__file__).name} results_dir output_dir", file=stderr)
-        stop(True) if running_in_notebook() else exit(1)
-
-    md(f"The notebook uses `{RESULTS_CSV}` and an output directory for writing chart(s).")
+def _():
+    results_dir, output_dir = require_path_args('results_dir', 'output_dir')
+    results_csv = results_dir / RESULTS_CSV
+    results_csv.is_file() or exit_notebook(f"File {results_csv} not found")
+    output_dir.mkdir(parents=True, exist_ok=True)
+    md(f"The notebook uses `{results_csv}` as input and `{output_dir}` for writing chart(s).")
     return output_dir, results_csv
 
 
