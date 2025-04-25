@@ -16,6 +16,7 @@ MIN_JAVA = 6
 MAX_JAVA = 23
 IMAGE_NAME = 'sulir/jdk-study'
 DOCKER_PROJECT_SRC = '/mnt/project'
+GITHUB_CSV = 'github.csv'
 RESULTS_CSV = 'results.csv'
 
 def require_path_args(*args):
