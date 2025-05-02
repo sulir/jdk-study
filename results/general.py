@@ -1,8 +1,6 @@
-
-
 import marimo
 
-__generated_with = "0.13.2"
+__generated_with = "0.13.4"
 app = marimo.App(width="medium")
 
 with app.setup:
@@ -81,10 +79,10 @@ def test_outcomes_reflect_exit_codes():
 def _():
     mo.md(
         r"""
-        ## **RQ1:** What proportion of projects is buildable by their supplied script, using Java Development Kit versions ranging from 6 to 23?
+    ## **RQ1:** What proportion of projects is buildable by their supplied script, using Java Development Kit versions ranging from 6 to 23?
 
-        First, we create a summary table with success and failure rates (as percentages) for each Java version:
-        """
+    First, we create a summary table with success and failure rates (as percentages) for each Java version:
+    """
     )
     return
 
@@ -155,10 +153,10 @@ def _(output_dir, rates_long):
 def _():
     mo.md(
         r"""
-        ## **H:** With increasing JDK version numbers, the proportion of build-failing projects tends to grow.
+    ## **H:** With increasing JDK version numbers, the proportion of build-failing projects tends to grow.
 
-        We use the Mann-Kendall Test for monotonic trends.
-        """
+    We use the Mann-Kendall Test for monotonic trends.
+    """
     )
     return
 

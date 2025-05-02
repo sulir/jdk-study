@@ -1,8 +1,6 @@
-
-
 import marimo
 
-__generated_with = "0.13.2"
+__generated_with = "0.13.4"
 app = marimo.App(width="medium")
 
 with app.setup:
@@ -74,10 +72,10 @@ def _(outcomes):
 def _():
     mo.md(
         r"""
-        ## **RQ3:** What proportion of projects always fails, passes only for some JDKs, and passes for all JDKs?
+    ## **RQ3:** What proportion of projects always fails, passes only for some JDKs, and passes for all JDKs?
 
-        We divide the projects into three subsets based on the number of JDKs for which their build passed:
-        """
+    We divide the projects into three subsets based on the number of JDKs for which their build passed:
+    """
     )
     return
 
@@ -125,10 +123,10 @@ def _(subsets):
 def _():
     mo.md(
         r"""
-        ## **RQ4:** How do projects achieve compatibility with all JDKs at once?
+    ## **RQ4:** How do projects achieve compatibility with all JDKs at once?
 
-        We load also the metadata from the [project search tool](https://seart-ghs.si.usi.ch), so they could be merged with our results for inspection:
-        """
+    We load also the metadata from the [project search tool](https://seart-ghs.si.usi.ch), so they could be merged with our results for inspection:
+    """
     )
     return
 
