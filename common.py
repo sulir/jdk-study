@@ -32,3 +32,15 @@ def exit_notebook(message):
     print(message, file=stderr)
     from marimo import running_in_notebook, stop
     stop(True) if running_in_notebook() else exit(1)
+
+def latex_table(data, highlight_max=False):
+    bold_head = data.style.format_index(r'\textbf{{{}}}', escape='latex', axis='columns')
+    formatted = bold_head.hide(axis='index').format(precision=1)
+
+    if highlight_max:
+        numeric_cols = data.select_dtypes(include='number').columns
+        formatted = formatted.highlight_max(numeric_cols, axis='columns', props='textbf:--rwrap;')
+
+    latex = formatted.to_latex(multicol_align='l')
+    from marimo import ui
+    return ui.code_editor(latex, language='stex', disabled=True)

@@ -11,7 +11,7 @@ with app.setup:
     from pathlib import Path
     from sys import path
     path.insert(1, str(Path(globals()['__file__']).resolve().parent / '..'))
-    from common import MAX_JAVA, MIN_JAVA, RESULTS_CSV, exit_notebook, require_path_args
+    from common import MAX_JAVA, MIN_JAVA, RESULTS_CSV, exit_notebook, latex_table, require_path_args
     from general import get_outcomes, get_rates, get_results
 
 
@@ -59,14 +59,14 @@ def _():
 
 @app.cell
 def _(rates):
-    jdk_rates = rates.sort_values("success", ascending=False).drop("failure", axis='columns')
-    jdk_rates["success"] = jdk_rates["success"].map(lambda r: f'{r:.1f}')
-    jdk_rates = jdk_rates.rename(columns={"success": "Success rate (%)"})
-    jdk_latex = jdk_rates.to_latex(index=False, escape=True, column_format='rr')
-    jdk_code = ui.code_editor(jdk_latex, language='stex', disabled=True)
+    jdk_rates = rates.sort_values("success", ascending=False)
+    jdk_rates.drop("failure", axis='columns', inplace=True)
+    jdk_rates.rename(columns={"success": "Success rate (%)"}, inplace=True)
+    jdk_latex = latex_table(jdk_rates)
 
     with option_context('display.max_rows', None):
-        output.append(hstack([plain(jdk_rates), jdk_code], justify='start'))
+        widgets = [plain(jdk_rates), jdk_latex]
+        output.append(hstack(widgets, justify='start'))
     return (jdk_rates,)
 
 
