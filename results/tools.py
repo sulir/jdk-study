@@ -270,7 +270,7 @@ def ant_error(log):
     after = r'\nTotal time: .+ seconds?\n'
     exclude_clean = 1
     processes = findall(fr'{before}([\s\S]*?){after}', log)[exclude_clean:]
-    
+
     bad_target = r'BUILD FAILED\nTarget "(jar|war|dist)" does not exist in the project'
     valid_targets = list(p for p in processes if not search(bad_target, p))
     analyzed = valid_targets[0] if valid_targets else processes[-1]
@@ -362,10 +362,12 @@ def get_categories_percent(failed_types, categories):
     total = categorized["category"].value_counts(normalize=True)
     total = total.mul(100).rename("Total").to_frame()
     total = total.transpose().reindex(columns=order)
+    total.index = ["Total"]
 
     result = concat([wide, total])
+    result.index.name = "Java version"
     result.columns = MultiIndex.from_product([["Failure category (%)"], result.columns])
-    return result.reset_index(names="Java version")
+    return result.reset_index()
 
 
 @app.cell
