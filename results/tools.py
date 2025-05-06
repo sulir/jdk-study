@@ -270,8 +270,10 @@ def ant_error(log):
     after = r'\nTotal time: .+ seconds?\n'
     exclude_clean = 1
     processes = findall(fr'{before}([\s\S]*?){after}', log)[exclude_clean:]
+    
     bad_target = r'BUILD FAILED\nTarget "(jar|war|dist)" does not exist in the project'
-    analyzed = next((p for p in processes if not search(bad_target, p)), processes[-1])
+    valid_targets = list(p for p in processes if not search(bad_target, p))
+    analyzed = valid_targets[0] if valid_targets else processes[-1]
 
     targets = findall(r'^([\w.-]+):$', analyzed, MULTILINE)
     if targets:
@@ -316,7 +318,7 @@ def _(failed_types):
 
 @app.cell(hide_code=True)
 def _(categories_csv):
-    mo.md(rf"""After the manual assignment is finished, the file `{categories_csv}` should assign each error type to one human-readable category. It should contain columns `type` and `category`. If it does not yet exist, an empty table that assigns each error type to the "other/unknown" category is created.""")
+    mo.md(rf"""The file `{categories_csv}` is supposed to be created manually by the researchers. It maps each machine-readable error type (from the tables above) to one human-readable error category. It should contain columns `type` and `category`. If it does not yet exist, we use a "demo" file that only maps `maven-compiler-plugin` type to the "compilation" category. Error types not present in the file are assigned to the "other/unknown" category by default.""")
     return
 
 
@@ -326,7 +328,7 @@ def _(categories_csv):
         if categories_csv.is_file():
             return read_csv(categories_csv)
         else:
-            return DataFrame(columns=["type", "category"])
+            return DataFrame([['maven-compiler-plugin', "compilation"]], columns=["type", "category"])
     return (get_categories,)
 
 
