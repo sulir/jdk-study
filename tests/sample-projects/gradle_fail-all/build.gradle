@@ -1,0 +1,7 @@
+plugins {
+    id 'java'
+}
+
+gradle.projectsEvaluated {
+    throw new GradleException("This build is configured to always fail")
+}
