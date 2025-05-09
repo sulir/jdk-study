@@ -303,7 +303,8 @@ def _(error_counts):
 
 @app.function
 def get_error_counts(failed_types):
-    counts = failed_types.type.value_counts().reset_index()
+    counts = failed_types.type.value_counts().to_frame()
+    counts = counts.sort_values(["count", "type"], ascending=[False, True]).reset_index()
     total = counts["count"].sum()
     counts["sum_percent"] = counts["count"].cumsum() / total * 100
     return counts
