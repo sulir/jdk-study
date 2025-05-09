@@ -22,7 +22,7 @@ builder=$1
 
 case "$builder" in
   gradlew | mvnw | antw)
-    builder="source ./$builder"
+    builder="bash ./$builder"
 esac
 
 case "$1" in
