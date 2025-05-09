@@ -117,6 +117,7 @@ def _():
 @app.cell
 def _(jdk_changes, output_dir):
     x_scale = Scale(domain=[MIN_JAVA, MAX_JAVA], padding=15)
+    y_scale = Scale(domain=[0, jdk_changes["success"].max() + 5])
     lts_versions = [8, 11, 17, 21]
     bold_lts = expr(expr.if_(expr.indexof(lts_versions, datum.value) != -1, 'bold', 'normal'))
 
@@ -137,7 +138,7 @@ def _(jdk_changes, output_dir):
         dy=expr(expr.if_(datum.direction == "decrease", 10, -10))
     ).encode(
         x=X("Java version", scale=x_scale),
-        y="success",
+        y=Y("success", scale=y_scale),
         text="change",
     )
 
