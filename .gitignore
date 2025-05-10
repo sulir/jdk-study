@@ -1,6 +1,7 @@
 .idea/
 .ipynb_checkpoints/
 .pytest_cache/
-[.]venv
+/[.]venv
 .vscode/
+__marimo__/
 __pycache__/
