@@ -362,8 +362,8 @@ def get_categories_percent(failed_types, categories):
     percentages = proportions.mul(100).rename("percent").reset_index()
     wide = percentages.pivot(columns="category", index="jdk", values="percent").fillna(0)
 
-    order = ["initialization", "dependency resolution", "resource processing", "compilation",
-             "documentation", "extra plugins", "packaging", "timeout", default]
+    order = ["initialization", "dependencies", "processing", "compilation",
+             "documentation", "packaging", "timeout", default]
     order = [c for c in order if c in wide.columns]
     wide = wide.reindex(columns=order)
 
