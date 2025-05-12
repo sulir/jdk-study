@@ -219,12 +219,19 @@ def _():
 @app.function
 def gradle_error(log):
     lines = log.splitlines()
-    last_task = None
-
-    for line in lines:
-        if line.startswith('> Could not resolve '):
+    try:
+        start = lines.index('* What went wrong:') + 1
+        end = lines.index('', start)
+        failures = [l.lstrip('> ') for l in lines[start:end]]
+        resolve_failed = (f.startswith('Could not resolve ') for f in failures)
+        jdk_failed = (f.startswith('Cannot find a Java installation ') for f in failures)
+        if any(resolve_failed) and not any(jdk_failed):
             return 'Resolve'
+    except ValueError:
+        pass
 
+    last_task = None
+    for line in lines:
         task = match(r'(> Task )?(:[\w.-]+)+', line)
         if task:
             last_task = task.group(2)
