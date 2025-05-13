@@ -7,12 +7,12 @@ from unittest import TestCase, main
 
 sys.path.insert(1, str(Path(__file__).resolve().parent / ".."))
 sys.path.insert(1, str(Path(__file__).resolve().parent / ".." / "results"))
+from common import MAX_JAVA, MIN_JAVA, RESULTS_CSV
 from results import general, jdks, projects, tools
 
 # Java versions range
-NUM_JAVA_VERSIONS = 18
-MIN_VERSION = 6
-JAVA_VERSIONS = list(range(MIN_VERSION, MIN_VERSION + NUM_JAVA_VERSIONS))
+NUM_JAVA_VERSIONS = MAX_JAVA - MIN_JAVA + 1
+JAVA_VERSIONS = list(range(MIN_JAVA, MAX_JAVA + 1))
 
 # Number of passed builds for each Java version
 ANT_PASS = [2, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
@@ -41,6 +41,7 @@ ALL_PROJECTS = ANT_PROJECTS + GRADLE_PROJECTS + MAVEN_PROJECTS
 ALWAYS_FAIL = 3
 ALWAYS_PASS = 3
 PARTIALLY_PASS = 6
+EARLIER_JDK_HELPS_PERCENT = 66.666666667
 
 
 class TestResults(TestCase):
@@ -71,7 +72,7 @@ class TestResults(TestCase):
         rmtree(cls.RESULTS_DIR)
 
     def setUp(self):
-        results_csv = Path(self.RESULTS_DIR) / "results.csv"
+        results_csv = Path(self.RESULTS_DIR) / RESULTS_CSV
         self.results = general.get_results(results_csv)
         self.outcomes = general.get_outcomes(self.results)
 
@@ -103,9 +104,7 @@ class TestResults(TestCase):
     def test_rq2(self):
         earlier_helps = projects.earlier_jdk_helps_percent(self.outcomes)
 
-        self.assertAlmostEqual(
-            earlier_helps, (PARTIALLY_PASS / (PARTIALLY_PASS + ALWAYS_FAIL)) * 100
-        )
+        self.assertAlmostEqual(earlier_helps, EARLIER_JDK_HELPS_PERCENT)
 
     def test_rq3(self):
         subsets = projects.passed_subsets(self.outcomes)
