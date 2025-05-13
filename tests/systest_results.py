@@ -5,8 +5,8 @@ from subprocess import DEVNULL, run
 from tempfile import mkdtemp
 from unittest import TestCase, main
 
-sys.path.insert(1, str(Path(globals()["__file__"]).resolve().parent / ".."))
-sys.path.insert(1, str(Path(globals()["__file__"]).resolve().parent / ".." / "results"))
+sys.path.insert(1, str(Path(__file__).resolve().parent / ".."))
+sys.path.insert(1, str(Path(__file__).resolve().parent / ".." / "results"))
 from results import general, jdks, projects, tools
 
 # Java versions range
