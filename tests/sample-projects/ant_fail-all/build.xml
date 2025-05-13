@@ -1,0 +1,5 @@
+<project name="fail-all" default="check">
+  <target name="check">
+    <fail message="This build is designed to always fail" />
+  </target>
+</project>

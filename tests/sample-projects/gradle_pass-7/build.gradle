@@ -1,0 +1,10 @@
+plugins {
+    id 'java'
+}
+
+gradle.projectsEvaluated {
+    def javaVersion = System.getProperty('java.version')
+    if (!javaVersion.startsWith('1.7')) {
+        throw new GradleException("This build requires Java 7, but found version: ${javaVersion}")
+    }
+}

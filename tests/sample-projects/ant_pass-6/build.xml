@@ -1,0 +1,13 @@
+<project name="pass-specific" default="check">
+  <property name="required.java.version" value="1.6" />
+  <target name="check">
+
+    <condition property="correct.java.version">
+      <equals arg1="${ant.java.version}" arg2="${required.java.version}" />
+    </condition>
+
+    <fail unless="correct.java.version">
+      Java ${required.java.version} is required.
+    </fail>
+  </target>
+</project>
