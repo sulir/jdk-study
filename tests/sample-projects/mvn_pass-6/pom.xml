@@ -3,7 +3,7 @@
   <groupId>com.example</groupId>
   <artifactId>fail-all</artifactId>
   <version>0</version>
-  <packaging>jar</packaging>
+  <packaging>pom</packaging>
   <build>
     <plugins>
       <plugin>

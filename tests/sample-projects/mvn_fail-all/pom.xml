@@ -3,10 +3,10 @@
   <groupId>com.example</groupId>
   <artifactId>fail-all</artifactId>
   <version>0</version>
-  <packaging>jar</packaging>
+  <packaging>pom</packaging>
   <build>
     <plugins>
-      <!-- Using the fail plugin to force build failure -->
+      <!-- Using the enforcer plugin to force build failure -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-enforcer-plugin</artifactId>
