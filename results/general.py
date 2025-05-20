@@ -1,6 +1,6 @@
 import marimo
 
-__generated_with = "0.13.8"
+__generated_with = "0.13.10"
 app = marimo.App(width="medium")
 
 with app.setup:
@@ -118,7 +118,7 @@ def _(rates):
 
 @app.cell(hide_code=True)
 def _():
-    mo.md(r"""Finally, we plot the build success and failure rates as a stacked bar chart:""")
+    mo.md(r"""Finally, we plot the build failure (red, top bars) and success (green, bottom bars) rates as a stacked bar chart:""")
     return
 
 
@@ -130,11 +130,11 @@ def _(output_dir, rates_long):
     rates_bars = Chart(rates_long).mark_bar().encode(
         x="Java version:N",
         y=Y("Rate", title="Projects (%)", scale=Scale(domain=[0, 100])),
-        color=Color("Outcome", scale=outcome_scale)
+        color=Color("Outcome", scale=outcome_scale, legend=None)
     ).properties(width=600, height=200)
 
     def make_labels(outcome, compute_pos):
-        labels = rates_long.query("Outcome == @outcome").copy()
+        labels = rates_long[rates_long["Outcome"] == outcome]
         labels['pos'] = labels["Rate"].apply(compute_pos)
         return Chart(labels).mark_text(color='white').encode(
             x="Java version:N",
@@ -145,7 +145,7 @@ def _(output_dir, rates_long):
     failure_labels = make_labels("failure", lambda _: 96)
     rates_chart = rates_bars + success_labels + failure_labels
     rates_chart.save(output_dir / 'rates.pdf')
-    ui.altair_chart(rates_chart)
+    rates_chart
     return
 
 
@@ -155,7 +155,7 @@ def _():
         r"""
     ## **H:** With increasing JDK version numbers, the proportion of build-failing projects tends to grow.
 
-    We use the Mann-Kendall Test for monotonic trends.
+    We use the Mann-Kendall test for monotonic trends.
     """
     )
     return
@@ -170,7 +170,7 @@ def compute_trend(rates):
 @app.cell
 def _(rates):
     h_result = compute_trend(rates)
-    md(f"The p-value is **{h_result.p:.4f}**.\n\nThe type of the trend is: **{h_result.trend}**.")
+    md(f"The p-value is **{h_result.p:.4f}**, tau {h_result.Tau:.02}. The type of the trend is: **{h_result.trend}**.")
     return
 
 

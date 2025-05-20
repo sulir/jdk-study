@@ -102,7 +102,7 @@ class TestResults(TestCase):
         )
 
     def test_rq2(self):
-        earlier_helps = projects.earlier_jdk_helps_percent(self.outcomes)
+        earlier_helps = projects.other_jdk_helps_percent(self.outcomes)
 
         self.assertAlmostEqual(earlier_helps, EARLIER_JDK_HELPS_PERCENT)
 

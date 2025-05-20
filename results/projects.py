@@ -1,6 +1,6 @@
 import marimo
 
-__generated_with = "0.13.8"
+__generated_with = "0.13.10"
 app = marimo.App(width="medium")
 
 with app.setup:
@@ -50,21 +50,27 @@ def _():
 
 @app.cell(hide_code=True)
 def _():
-    md(f"The latest JDK version in out study was {MAX_JAVA}.")
+    mo.md(rf"""The latest JDK version in out study was {MAX_JAVA}.""")
     return
 
 
 @app.function
-def earlier_jdk_helps_percent(outcomes):
-    latest_fail = outcomes[~outcomes[str(MAX_JAVA)]]
-    earlier_success = latest_fail[latest_fail.any(axis='columns')]
-    return len(earlier_success) / len(latest_fail) * 100
+def other_jdk_helps_percent(outcomes, current=MAX_JAVA):
+    current_fail = outcomes[~outcomes[str(current)]]
+    other_success = current_fail[current_fail.any(axis='columns')]
+    return len(other_success) / len(current_fail) * 100
 
 
 @app.cell
 def _(outcomes):
-    earlier_helps = earlier_jdk_helps_percent(outcomes)
-    md(f"**{earlier_helps:.1f}%** of projects failing under the latest JDK can be built using an earlier JDK.")
+    other_helps = other_jdk_helps_percent(outcomes)
+    md(f"**{other_helps:.1f}%** of projects failing under the latest JDK can be built using an earlier JDK.")
+    return
+
+
+@app.cell(hide_code=True)
+def _(outcomes):
+    mo.md(rf"""If we consider the latest LTS version (21), another JDK helps {other_jdk_helps_percent(outcomes, 21):.1f}% of projects.""")
     return
 
 
@@ -113,9 +119,25 @@ def _(subsets):
     subsets_percent = passed_subsets_percent(subsets)
     assert isclose(sum(subsets_percent.values()), 100)
 
-    md(f"""**{subsets_percent['none']:.1f}%**% of project always fail,
+    md(f"""**{subsets_percent['none']:.1f}%** of project always fail,
            **{subsets_percent['part']:.1f}%** pass only for some JDKs, and
            **{subsets_percent['all']:.1f}%** pass for all JDKs.""")
+    return
+
+
+@app.cell(hide_code=True)
+def _():
+    mo.md(r"""For completeness, here are percentages of projects buildable with the given counts of JDKs:""")
+    return
+
+
+@app.cell
+def _(outcomes):
+    passed = outcomes.sum('columns')
+    passed_jdk_counts_percent = passed.value_counts(normalize=True).mul(100).to_frame()
+    passed_jdk_counts_percent.index.name = "Java version"
+    passed_jdk_counts_percent.columns.name = "percent"
+    passed_jdk_counts_percent
     return
 
 
