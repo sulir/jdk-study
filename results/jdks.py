@@ -1,13 +1,14 @@
 import marimo
 
-__generated_with = "0.13.8"
+__generated_with = "0.13.10"
 app = marimo.App(width="medium")
 
 with app.setup:
     import marimo as mo
     from altair import Axis, Chart, Color, Scale, X, Y, datum, expr
+    from itertools import combinations
     from marimo import hstack, md, output, plain, ui
-    from pandas import option_context
+    from pandas import DataFrame, option_context
     from pathlib import Path
     from sys import path
     path.insert(1, str(Path(globals()['__file__']).resolve().parent / '..'))
@@ -81,6 +82,27 @@ def _(jdk_rates):
 
 @app.cell(hide_code=True)
 def _():
+    mo.md(r"""Next, we determine what proportions of projects can combinations of multiple JDKs (2, 3, or 4) successfully build.""")
+    return
+
+
+@app.function
+def get_union_rates(outcomes, length):
+    passing_unions = {}
+    for versions in combinations(range(MIN_JAVA, MAX_JAVA + 1), length):
+        passing_unions[versions] = outcomes[map(str, versions)].any(axis='columns').mean() * 100
+    result = DataFrame(list(passing_unions.items()), columns=["combination", "success_percent"])
+    return result.sort_values("success_percent", ascending=False)
+
+
+@app.cell
+def _(outcomes):
+    {n: get_union_rates(outcomes, n) for n in (2, 3, 4, 5)}
+    return
+
+
+@app.cell(hide_code=True)
+def _():
     mo.md(r"""## **RQ6:** Which JDK versions cause sudden drops in the passing rate?""")
     return
 
@@ -132,7 +154,7 @@ def _(jdk_changes, output_dir):
         color=Color("direction", scale=Scale(
             domain=["decrease", "increase"],
             range=['#D2836F', '#4F9D69']
-        ), title="Change type")
+        ), legend=None)
     )
     labels = Chart(jdk_changes).mark_text(
         dy=expr(expr.if_(datum.direction == "decrease", 10, -10))
@@ -144,7 +166,7 @@ def _(jdk_changes, output_dir):
 
     changes_chart = (candlesticks + line_plot + labels).properties(width=600, height=300)
     changes_chart.save(output_dir / 'changes.pdf')
-    ui.altair_chart(changes_chart)
+    changes_chart
     return
 
 

@@ -119,9 +119,10 @@ def _(subsets):
     subsets_percent = passed_subsets_percent(subsets)
     assert isclose(sum(subsets_percent.values()), 100)
 
-    md(f"""**{subsets_percent['none']:.1f}%** of project always fail,
-           **{subsets_percent['part']:.1f}%** pass only for some JDKs, and
-           **{subsets_percent['all']:.1f}%** pass for all JDKs.""")
+    md(f"""**{subsets_percent['none']}%** of project always fail,
+           **{subsets_percent['part']}%** pass only for some JDKs, and
+           **{subsets_percent['all']}%** pass for all JDKs.
+           {(subsets_percent['part'] + subsets_percent['all']):.1f}% pass for at least one JDK.""")
     return
 
 
@@ -135,7 +136,7 @@ def _():
 def _(outcomes):
     passed = outcomes.sum('columns')
     passed_jdk_counts_percent = passed.value_counts(normalize=True).mul(100).to_frame()
-    passed_jdk_counts_percent.index.name = "Java version"
+    passed_jdk_counts_percent.index.name = "version count"
     passed_jdk_counts_percent.columns.name = "percent"
     passed_jdk_counts_percent
     return
