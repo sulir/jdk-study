@@ -1,6 +1,6 @@
 import marimo
 
-__generated_with = "0.13.8"
+__generated_with = "0.13.11"
 app = marimo.App(width="medium")
 
 with app.setup:
@@ -65,7 +65,7 @@ def get_tools(results, outcomes):
     tool_order = ["Gradle", "Maven", "Ant"]
     tools = tools[tool_order]
     tools.columns = MultiIndex.from_product([["Success rate (%)"], tool_order])
-    tools.insert(0, ("", "Java version"), tools.index)
+    tools.insert(0, ("Java version", ""), tools.index)
 
     means = tools.iloc[:, 1:].mean()
     tools.loc["Mean"] = ["Mean"] + means.tolist()
@@ -81,7 +81,7 @@ def _(outcomes, results):
 
 @app.cell
 def _(tools):
-    latex_table(tools)
+    latex_table(tools, rule_before_last=True)
     return
 
 
@@ -94,7 +94,8 @@ def _():
 @app.cell
 def _(tools):
     tools_no_mean = tools[tools.iloc[:, 0].map(lambda v: v.isnumeric())]
-    tools_long = tools_no_mean.melt("Java version", var_name="Tool", value_name="success", col_level=1)
+    tools_long = tools_no_mean.melt("", var_name="Tool", value_name="success", col_level=1)
+    tools_long.rename(columns={"": "Java version"}, inplace=True)
     tools_long["Java version"] = tools_long["Java version"].astype(int)
     tools_long
     return (tools_long,)
@@ -113,7 +114,7 @@ def _(output_dir, tools_long):
     ).properties(width=600, height=300)
 
     tools_plot.save(output_dir / 'tools.pdf')
-    ui.altair_chart(tools_plot)
+    tools_plot
     return
 
 
@@ -135,7 +136,9 @@ def get_wrappers(results, outcomes):
     wrapper_outcomes = wrapper_data.join(outcomes)
     wrapper_outcomes.replace({"gradlew": "wrapper", "mvnw": "wrapper", nan: "system"}, inplace=True)
     percent = wrapper_outcomes.groupby(["tool", "wrapper"]).mean().transpose() * 100
-    percent.insert(0, ("", "Java version"), percent.index)
+    percent.insert(0, ("Java version", ""), percent.index)
+    percent.rename(columns=lambda c: f"{c} (success %)" if c in ("Gradle", "Maven") else c, inplace=True)
+    percent = percent.reindex(columns=["", "wrapper", "system"], level=1)
 
     means = percent.iloc[:, 1:].mean()
     percent.loc["Mean"] = ["Mean"] + means.tolist()
@@ -151,7 +154,20 @@ def _(outcomes, results):
 
 @app.cell
 def _(wrappers):
-    latex_table(wrappers)
+    latex_table(wrappers, rule_before_last=True)
+    return
+
+
+@app.cell(hide_code=True)
+def _():
+    mo.md(r"""We also compute the percentages of projects that have a wrapper script for each build tool.""")
+    return
+
+
+@app.cell
+def _(results):
+    having_wrapper = results.groupby("tool")["wrapper"].apply(lambda x: x.notnull().mean() * 100)
+    having_wrapper
     return
 
 
@@ -373,9 +389,9 @@ def get_categories_percent(failed_types, categories):
     total.index = ["Total"]
 
     result = concat([wide, total])
-    result.index.name = "Java version"
     result.columns = MultiIndex.from_product([["Failure category (%)"], result.columns])
-    return result.reset_index()
+    result = result.reset_index(names="Java version")
+    return result.astype({result.columns[0]: str})
 
 
 @app.cell
@@ -388,7 +404,7 @@ def _(categories, failed_types):
 
 @app.cell
 def _(categories_percent):
-    latex_table(categories_percent, highlight_max=True)
+    latex_table(categories_percent, highlight_max=True, rule_before_last=True)
     return
 
 

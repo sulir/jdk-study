@@ -163,32 +163,33 @@ class TestResults(TestCase):
             wrappers.columns.tolist(),
             [
                 ("", "Java version"),
-                ("Gradle", "system"),
                 ("Gradle", "wrapper"),
-                ("Maven", "system"),
+                ("Gradle", "system"),
                 ("Maven", "wrapper"),
+                ("Maven", "system")
             ],
         )
         self.assertEqual(
             wrappers[("", "Java version")].tolist(),
             [str(i) for i in JAVA_VERSIONS] + ["Mean"],
         )
-        self.assertAllAlmostEqual(
-            wrappers[("Gradle", "system")].tolist(),
-            with_mean([r / GRADLE_SYSTEM_PROJECTS * 100 for r in GRADLE_SYSTEM_PASS]),
-        )
+
         self.assertAllAlmostEqual(
             wrappers[("Gradle", "wrapper")].tolist(),
             with_mean([r / GRADLE_WRAPPER_PROJECTS * 100 for r in GRADLE_WRAPPER_PASS]),
         )
-
         self.assertAllAlmostEqual(
-            wrappers[("Maven", "system")].tolist(),
-            with_mean([r / GRADLE_SYSTEM_PROJECTS * 100 for r in MAVEN_SYSTEM_PASS]),
+            wrappers[("Gradle", "system")].tolist(),
+            with_mean([r / GRADLE_SYSTEM_PROJECTS * 100 for r in GRADLE_SYSTEM_PASS]),
         )
+
         self.assertAllAlmostEqual(
             wrappers[("Maven", "wrapper")].tolist(),
             with_mean([r / MAVEN_WRAPPER_PROJECTS * 100 for r in MAVEN_WRAPPER_PASS]),
+        )
+        self.assertAllAlmostEqual(
+            wrappers[("Maven", "system")].tolist(),
+            with_mean([r / GRADLE_SYSTEM_PROJECTS * 100 for r in MAVEN_SYSTEM_PASS]),
         )
 
     def assertAllAlmostEqual(self, actual, expected):
