@@ -6,7 +6,7 @@ app = marimo.App(width="medium")
 with app.setup:
     import marimo as mo
     from altair import Chart, Color, Scale, X, Y
-    from marimo import md, ui
+    from marimo import md
     from math import isclose
     from numpy import nan
     from pandas import concat, read_csv, DataFrame, MultiIndex

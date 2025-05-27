@@ -82,7 +82,7 @@ def _(jdk_rates):
 
 @app.cell(hide_code=True)
 def _():
-    mo.md(r"""Next, we determine what proportions of projects can combinations of multiple JDKs (2, 3, or 4) successfully build.""")
+    mo.md(r"""Next, we determine what proportions of projects can combinations of multiple JDKs (2-5) successfully build.""")
     return
 
 

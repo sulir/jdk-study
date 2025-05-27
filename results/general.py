@@ -6,7 +6,7 @@ app = marimo.App(width="medium")
 with app.setup:
     import marimo as mo
     from altair import Chart, Color, Scale, Text, Y
-    from marimo import md, ui
+    from marimo import md
     from pandas import DataFrame, read_csv
     from pandas.testing import assert_frame_equal
     from pathlib import Path
