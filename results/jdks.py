@@ -58,11 +58,16 @@ def _():
     return
 
 
+@app.function
+def get_jdk_rates(rates):
+    result = rates.sort_values("success", ascending=False)
+    result.drop("failure", axis='columns', inplace=True)
+    return result.rename(columns={"success": "Success rate (%)"})
+
+
 @app.cell
 def _(rates):
-    jdk_rates = rates.sort_values("success", ascending=False)
-    jdk_rates.drop("failure", axis='columns', inplace=True)
-    jdk_rates.rename(columns={"success": "Success rate (%)"}, inplace=True)
+    jdk_rates = get_jdk_rates(rates)
     jdk_latex = latex_table(jdk_rates)
 
     with option_context('display.max_rows', None):
