@@ -34,7 +34,7 @@ def _():
     categories_csv = results_dir / 'categories.csv'
     output_dir.mkdir(parents=True, exist_ok=True)
     md(f"The notebook uses `{results_csv}`, `{log_dir}`, and optionally `{categories_csv}` as input. " +
-       f"For writing chart(s), `{output_dir}` is used.")
+       f"For writing, `{output_dir}` is used.")
     return categories_csv, log_dir, output_dir, results_csv
 
 

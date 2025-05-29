@@ -29,23 +29,23 @@ pip install -r requirements.txt
 
 Before running the scripts, make sure you have the Python virtual environment activated (`source .venv/bin/activate`). Create an empty directory, e.g., `data` and place `github.csv` from the Zenodo repository into it.
 
-To replicate the whole study, run the following command:
+To execute the whole study, run the following command:
 
 ```bash
-./jdk-study data
+./jdk-study.sh data
 ```
 
 This can take about two weeks though. To execute the study on a small sample of 3 projects, which should take under an hour, run:
 
 ```bash
-./jdk-study data 3
+./jdk-study.sh data 3
 ```
 
 The following will be created in the `data` directory:
 - `projects/`, `project.tar.xz`: The directory with the source code of the projects and its compressed version.
 - `results.csv`: The main results file with build outcomes.
 - `logs/`, `logs.tar.xz`: The directory with the build logs and its compressed version.
-- `out/`: The output directory of Marimo notebooks with charts in the PDF format.
+- `out/`: The output directory of Marimo notebooks with charts in the PDF format and a CSV file with error types.
 
 At the end of the execution, four interactive [Marimo notebooks](https://marimo.io) will be open in the web browser.
 
