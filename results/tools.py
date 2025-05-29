@@ -1,6 +1,6 @@
 import marimo
 
-__generated_with = "0.13.11"
+__generated_with = "0.13.14"
 app = marimo.App(width="medium")
 
 with app.setup:
@@ -62,7 +62,7 @@ def get_tools(results, outcomes):
     tool_outcomes = results[["tool"]].join(outcomes)
     tools = tool_outcomes.groupby("tool").mean().transpose() * 100
 
-    tool_order = ["Gradle", "Maven", "Ant"]
+    tool_order = [t for t in ["Gradle", "Maven", "Ant"] if t in tools.columns]
     tools = tools[tool_order]
     tools.columns = MultiIndex.from_product([["Success rate (%)"], tool_order])
     tools.insert(0, ("Java version", ""), tools.index)
@@ -312,8 +312,9 @@ def _():
 
 
 @app.cell
-def _(failed, log_dir):
+def _(failed, log_dir, output_dir):
     failed_types = get_failed_types(failed, log_dir)
+    failed_types.to_csv(output_dir / 'error-types.csv', index=False)
     failed_types
     return (failed_types,)
 

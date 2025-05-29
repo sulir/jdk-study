@@ -15,17 +15,18 @@ CACHE_DIRS = ['/root/.gradle/caches/modules-2/files-2.1', '/root/.gradle/wrapper
               '/root/.m2/repository', '/root/.m2/wrapper',
               '/root/.ivy2/cache']
 
-def run_builds(dataset_dir, results_dir):
+def run_builds(dataset_dir, result_dir, log_dir):
     initialize()
     csv_fields = ['name', 'commit', 'tool', 'wrapper'] + [f'java{v}' for v in range(MIN_JAVA, MAX_JAVA + 1)]
-    results_csv = prepare_results_csv(results_dir, csv_fields)
+    results_csv = prepare_results_csv(result_dir, csv_fields)
+    log_dir.mkdir(parents=True, exist_ok=True)
     project_dirs = list_pending_projects(dataset_dir, results_csv)
 
     with open(results_csv, 'a') as out_file:
         writer = DictWriter(out_file, csv_fields) # type: ignore
         for project_dir in project_dirs:
             project_name = get_project_name(project_dir)
-            result = build_project(project_name, project_dir, results_dir)
+            result = build_project(project_name, project_dir, log_dir)
             writer.writerow(result)
             out_file.flush()
             remove_cache_volumes()
@@ -47,9 +48,9 @@ def get_volume_name(cache_dir):
     collision_prevention = crc32(cache_dir.encode())
     return '%s_%08x' % (user_friendly_name, collision_prevention)
 
-def prepare_results_csv(results_dir, fields):
-    results_dir.mkdir(parents=True, exist_ok=True)
-    csv_path = results_dir / RESULTS_CSV
+def prepare_results_csv(result_dir, fields):
+    result_dir.mkdir(parents=True, exist_ok=True)
+    csv_path = result_dir / RESULTS_CSV
     with open(csv_path, 'a') as out_file:
         if out_file.tell() == 0:
             DictWriter(out_file, fields).writeheader()  # type: ignore
@@ -69,17 +70,17 @@ def list_pending_projects(dataset_dir, results_csv):
 def get_project_name(project_dir):
     return project_dir.name.replace('_', '/', 1)
 
-def build_project(project_name, project_dir, results_dir):
+def build_project(project_name, project_dir, log_dir):
     info("Analyzing %s", project_name)
     builder, result = analyze_project(project_name, project_dir)
-    log_dir = prepare_log_dir(project_dir, results_dir)
+    project_log_dir = prepare_log_dir(project_dir, log_dir)
 
     java_versions = list(range(MIN_JAVA, MAX_JAVA + 1))
     seed(project_name)
     shuffle(java_versions)
     for java_version in java_versions:
         info("Building %s with Java %d", project_name, java_version)
-        exitcode = build_project_with_java(project_dir, java_version, builder, log_dir)
+        exitcode = build_project_with_java(project_dir, java_version, builder, project_log_dir)
         result[f'java{java_version}'] = exitcode
 
     return result
@@ -92,13 +93,13 @@ def analyze_project(project_name, project_dir):
     builder = tool.command if wrapper is None else wrapper
     return builder, result
 
-def prepare_log_dir(project_dir, results_dir):
-    log_dir = results_dir / project_dir.name
-    log_dir.mkdir(exist_ok=True)
-    for file in log_dir.iterdir():
+def prepare_log_dir(project_dir, log_dir):
+    project_log_dir = log_dir / project_dir.name
+    project_log_dir.mkdir(exist_ok=True)
+    for file in project_log_dir.iterdir():
         if file.is_file():
             file.unlink()
-    return log_dir
+    return project_log_dir
 
 def get_commit(project_dir):
     return check_output(['git', 'rev-parse', 'HEAD'], cwd=project_dir).decode().strip()
@@ -137,7 +138,7 @@ def handle_exit(*_):
     exit(1)
 
 if __name__ == '__main__':
-    if len(argv) == 3:
-        run_builds(Path(argv[1]), Path(argv[2]))
+    if len(argv) == 4:
+        run_builds(Path(argv[1]), Path(argv[2]), Path(argv[3]))
     else:
-        print("Usage: %s <dataset_dir> <results_dir>" % Path(__file__).name)
+        print("Usage: %s <dataset_dir> <result_dir> <log_dir>" % Path(__file__).name)

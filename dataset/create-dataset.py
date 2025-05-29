@@ -1,24 +1,27 @@
 #!/usr/bin/env python3
 from csv import DictReader
 from logging import basicConfig, error, info
-from os import environ, walk
+from os import environ, listdir, makedirs, walk
 from os.path import abspath, basename, dirname, isfile, join
 from random import seed, shuffle
 from re import fullmatch
 from shutil import rmtree
 from subprocess import CalledProcessError, check_output, DEVNULL, run
-from sys import argv, path
+from sys import argv, exit, path
 path.insert(1, dirname(dirname(abspath(__file__))))
 from common import RANDOM_SEED, TOOLS, LOG_CONFIG
 
-PROJECT_COUNT = 2500
 GIT_URL = 'https://github.com/%s.git'
 EXCLUDE = [[r'.*\.java', r'\s*import\s+(javax\.microedition|(com\.(google\.)?)?android|androidx)\..*'],
            [r'AndroidManifest\.xml', r'.*']]
 
-def create_dataset(github_csv, output_dir):
+def create_dataset(github_csv, output_dir, project_count):
     basicConfig(**LOG_CONFIG)
     seed(RANDOM_SEED)
+    makedirs(output_dir, exist_ok=True)
+    if listdir(output_dir):
+        print(f"Directory {output_dir} is not empty")
+        exit(1)
 
     with open(github_csv) as in_file:
         reader = DictReader(in_file)
@@ -30,7 +33,7 @@ def create_dataset(github_csv, output_dir):
         for project in projects:
             if create_project(project, output_dir, hashes):
                 included += 1
-                if included == PROJECT_COUNT:
+                if included == project_count:
                     break
             else:
                 delete_project(project, output_dir)
@@ -96,7 +99,7 @@ def file_matches(file, name, content):
     return False
 
 if __name__ == '__main__':
-    if len(argv) == 3:
-        create_dataset(argv[1], argv[2])
+    if len(argv) == 4 and argv[3].isdigit():
+        create_dataset(argv[1], argv[2], int(argv[3]))
     else:
-        print("Usage: %s <github.csv> <output_dir>" % basename(__file__))
+        print(f"Usage: {basename(__file__)} <github.csv> <output_dir> <project_count>")

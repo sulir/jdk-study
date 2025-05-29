@@ -1,6 +1,6 @@
 import marimo
 
-__generated_with = "0.13.11"
+__generated_with = "0.13.14"
 app = marimo.App(width="medium")
 
 with app.setup:
@@ -177,7 +177,7 @@ def _(jdk_changes, output_dir):
 
 @app.cell
 def _(jdk_changes):
-    jdk_drops = jdk_changes.sort_values("difference").head(3)
+    jdk_drops = jdk_changes.dropna().sort_values("difference").head(3)
     report_format = lambda r: f"JDK **{r['Java version']}** ({r['change']} pp)"
     jdk_drops_str = ", ".join(jdk_drops.apply(report_format, axis='columns'))
     md(f"Java version having the largest drop in the passing rate are: {jdk_drops_str}.")

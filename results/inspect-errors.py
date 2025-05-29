@@ -5,7 +5,7 @@ from random import sample
 from subprocess import run
 from sys import argv
 
-SAMPLE_SIZE = 3
+SAMPLE_SIZE = 5
 EDITOR = 'xdg-open'
 
 def main(error_types_csv, log_dir):

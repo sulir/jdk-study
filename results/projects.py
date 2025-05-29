@@ -1,6 +1,6 @@
 import marimo
 
-__generated_with = "0.13.11"
+__generated_with = "0.13.14"
 app = marimo.App(width="medium")
 
 with app.setup:
@@ -148,7 +148,7 @@ def _():
         r"""
     ## **RQ4:** How do projects achieve compatibility with all JDKs at once?
 
-    We load also the metadata from the [project search tool](https://seart-ghs.si.usi.ch), so they could be merged with our results for inspection:
+    We load also the GitHub project metadata, so they could be merged with our results for inspection:
     """
     )
     return
