@@ -1,6 +1,6 @@
 import marimo
 
-__generated_with = "0.13.14"
+__generated_with = "0.13.15"
 app = marimo.App(width="medium")
 
 with app.setup:
@@ -125,7 +125,7 @@ def _(output_dir, rates_long):
     ).properties(width=600, height=200)
 
     def make_labels(outcome, compute_pos):
-        labels = rates_long[rates_long["Outcome"] == outcome]
+        labels = rates_long[rates_long["Outcome"] == outcome].copy()
         labels['pos'] = labels["Rate"].apply(compute_pos)
         return Chart(labels).mark_text(color='white').encode(
             x="Java version:N",

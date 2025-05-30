@@ -27,7 +27,7 @@ pip install -r requirements.txt
 
 ## Study Replication
 
-Before running the scripts, make sure you have the Python virtual environment activated (`source .venv/bin/activate`). Create an empty directory, e.g., `data` and place `github.csv` from the Zenodo repository into it.
+Before running the scripts, make sure you have the Python virtual environment activated (`source .venv/bin/activate`). Create an empty directory, e.g., `data` and place `github.csv` from the [data repository](https://doi.org/10.5281/zenodo.15232717) into it.
 
 To execute the whole study, run the following command:
 
