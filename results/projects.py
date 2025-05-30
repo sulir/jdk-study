@@ -172,7 +172,8 @@ def _():
 def _(github, results, subsets, trivial_lines):
     compatible = results.loc[subsets['all'].index, ~results.columns.str.startswith('java')]
     compatible = compatible.join(github)
-    compatible.drop(columns=['id', 'mainLanguage', 'metrics', 'labels', 'topics'], inplace=True)
+    compatible.drop(columns=['mainLanguage', 'homepage', 'metrics', 'languages', 'labels', 'topics'],
+                    inplace=True, errors='ignore')
     compatible = compatible[compatible['codeLines'] > trivial_lines]
     compatible
     return (compatible,)
