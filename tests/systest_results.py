@@ -116,6 +116,16 @@ class SystemTestResults(TestCase):
         )
         self.assertAlmostEqual(subsets_percent["all"], ALWAYS_PASS / ALL_PROJECTS * 100)
 
+    def test_rq5(self):
+        rates = general.get_rates(self.outcomes)
+        jdk_rates = jdks.get_jdk_rates(rates)
+        # For the sample projects, lowest JDK versions have highest success rate
+        self.assertEqual(jdk_rates["Java version"].to_list(), JAVA_VERSIONS)
+        self.assertAllAlmostEqual(
+            jdk_rates["Success rate (%)"].to_list(),
+            [p/ALL_PROJECTS*100 for p in ALL_PASS]
+        )
+
     def test_rq6(self):
         rates = general.get_rates(self.outcomes)
         jdk_changes = jdks.get_jdk_changes(rates)
