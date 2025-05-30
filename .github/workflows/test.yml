@@ -17,6 +17,11 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
+      - name: Set up Git
+        run: |
+          git config --global user.email "test@example.org"
+          git config --global user.name "Test"
+
       - name: Run unit tests
         run: pytest
 
