@@ -65,7 +65,7 @@ class SystemTestResults(TestCase):
         run_build = (
             Path(__file__).parent / ".." / "execution" / "run-builds.py"
         ).resolve()
-        run([sys.executable, run_build, cls.DATASET_DIR, cls.RESULTS_DIR], check=True)
+        run([sys.executable, run_build, cls.DATASET_DIR, cls.RESULTS_DIR, cls.RESULTS_DIR], check=True)
 
     @classmethod
     def tearDownClass(cls):
@@ -131,14 +131,14 @@ class SystemTestResults(TestCase):
         self.assertEqual(
             tools_rates.columns.tolist(),
             [
-                ("", "Java version"),
+                ("Java version", ""),
                 ("Success rate (%)", "Gradle"),
                 ("Success rate (%)", "Maven"),
                 ("Success rate (%)", "Ant"),
             ],
         )
         self.assertEqual(
-            tools_rates[("", "Java version")].tolist(),
+            tools_rates[("Java version", "")].tolist(),
             [str(i) for i in JAVA_VERSIONS] + ["Mean"],
         )
 
@@ -162,33 +162,33 @@ class SystemTestResults(TestCase):
         self.assertEqual(
             wrappers.columns.tolist(),
             [
-                ("", "Java version"),
-                ("Gradle", "wrapper"),
-                ("Gradle", "system"),
-                ("Maven", "wrapper"),
-                ("Maven", "system")
+                ("Java version", ""),
+                ("Gradle (success %)", "wrapper"),
+                ("Gradle (success %)", "system"),
+                ("Maven (success %)", "wrapper"),
+                ("Maven (success %)", "system")
             ],
         )
         self.assertEqual(
-            wrappers[("", "Java version")].tolist(),
+            wrappers[("Java version", "")].tolist(),
             [str(i) for i in JAVA_VERSIONS] + ["Mean"],
         )
 
         self.assertAllAlmostEqual(
-            wrappers[("Gradle", "wrapper")].tolist(),
+            wrappers[("Gradle (success %)", "wrapper")].tolist(),
             with_mean([r / GRADLE_WRAPPER_PROJECTS * 100 for r in GRADLE_WRAPPER_PASS]),
         )
         self.assertAllAlmostEqual(
-            wrappers[("Gradle", "system")].tolist(),
+            wrappers[("Gradle (success %)", "system")].tolist(),
             with_mean([r / GRADLE_SYSTEM_PROJECTS * 100 for r in GRADLE_SYSTEM_PASS]),
         )
 
         self.assertAllAlmostEqual(
-            wrappers[("Maven", "wrapper")].tolist(),
+            wrappers[("Maven (success %)", "wrapper")].tolist(),
             with_mean([r / MAVEN_WRAPPER_PROJECTS * 100 for r in MAVEN_WRAPPER_PASS]),
         )
         self.assertAllAlmostEqual(
-            wrappers[("Maven", "system")].tolist(),
+            wrappers[("Maven (success %)", "system")].tolist(),
             with_mean([r / GRADLE_SYSTEM_PROJECTS * 100 for r in MAVEN_SYSTEM_PASS]),
         )
 
