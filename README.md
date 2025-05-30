@@ -61,3 +61,17 @@ If more customization is needed, you can run the individual steps of the study:
 - `results/inspect-errors.py`: A helper script for the manual inspection of build logs.
 
 For a list of arguments of a given script, execute it without arguments.
+
+## Tests
+
+Before running the tests, activate the Python virtual environment. To launch unit tests, run:
+
+```bash
+pytest
+```
+
+For running system tests (tens of minutes), execute:
+
+```bash
+pytest tests/sys*.py
+```
