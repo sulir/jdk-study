@@ -26,6 +26,11 @@ jobs:
     - name: Run HTML generator
       run: results/generate-html.sh
 
+    - name: Generate directory listing
+      uses: gacts/directory-listing@v1
+      with:
+        target: ./html
+
     - name: Upload Pages artifact
       uses: actions/upload-pages-artifact@v3
       with:
