@@ -49,6 +49,10 @@ The following will be created in the `data` directory:
 
 At the end of the execution, four interactive [Marimo notebooks](https://marimo.io) will be open in the web browser.
 
+## Notebooks
+
+Static HTML versions of the Marimo notebooks can be generated using `results/generate-html.sh`. They are [available online for viewing](https://sulir.github.io/jdk-study/).
+
 ## Details
 
 If more customization is needed, you can run the individual steps of the study:
