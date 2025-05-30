@@ -16,7 +16,7 @@ class TestEnvironment(TestCase):
         with TemporaryDirectory() as results_dir:
             script = (Path(__file__).parent / '..' / 'execution' / 'run-builds.py').resolve()
             dataset_dir = Path(__file__).parent / 'pass-all'
-            result = run([executable, script, dataset_dir, results_dir])
+            result = run([executable, script, dataset_dir, results_dir, results_dir])
             self.assertEqual(result.returncode, 0)
 
             with open(Path(results_dir) / RESULTS_CSV, 'r') as results_file:
