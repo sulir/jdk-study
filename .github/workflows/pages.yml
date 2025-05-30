@@ -2,7 +2,7 @@ name: Marimo GitHub Pages
 
 on:
   push:
-    branches: [ master, notebook-pages ]
+    branches: [ master ]
 
 permissions:
   pages: write
