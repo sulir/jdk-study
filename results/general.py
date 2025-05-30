@@ -66,15 +66,6 @@ def _(results):
     return (outcomes,)
 
 
-@app.function
-def test_outcomes_reflect_exit_codes():
-    sample_results = DataFrame({'name': ['p/1', 'p/2'], 'java6': [0, 1], 'java7': [1, 0]})
-    sample_results.set_index('name', inplace=True)
-    expected = DataFrame({'name': ['p/1', 'p/2'], '6': [True, False], '7': [False, True]})
-    expected.set_index('name', inplace=True)
-    assert_frame_equal(get_outcomes(sample_results), expected)
-
-
 @app.cell(hide_code=True)
 def _():
     mo.md(

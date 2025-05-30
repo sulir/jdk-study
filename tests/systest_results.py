@@ -44,7 +44,7 @@ PARTIALLY_PASS = 6
 EARLIER_JDK_HELPS_PERCENT = 66.666666667
 
 
-class TestResults(TestCase):
+class SystemTestResults(TestCase):
     @classmethod
     def setUpClass(cls):
         cls.create_images()

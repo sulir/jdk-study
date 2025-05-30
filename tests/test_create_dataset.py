@@ -1,7 +1,7 @@
 from pathlib import Path
 from re import fullmatch
 from shutil import copytree
-from subprocess import run
+from subprocess import DEVNULL, run
 from sys import path
 from tempfile import TemporaryDirectory
 from unittest import main, TestCase
@@ -101,7 +101,7 @@ class TestCreateDataset(TestCase):
     def create_git_repo(project):
         repo = TemporaryDirectory()
         copytree(project, repo.name, dirs_exist_ok=True)
-        run('git init && git add . && git commit -m test', shell=True, cwd=repo.name, check=True)
+        run('git init && git add . && git commit -m test', shell=True, cwd=repo.name, check=True, stdout=DEVNULL)
         return repo
 
     def test_excluded_technologies_are_excluded(self):
