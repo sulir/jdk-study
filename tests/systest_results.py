@@ -5,9 +5,8 @@ from subprocess import DEVNULL, run
 from tempfile import mkdtemp
 from unittest import TestCase, main
 
-sys.path.insert(1, str(Path(__file__).resolve().parent / ".."))
-sys.path.insert(1, str(Path(__file__).resolve().parent / ".." / "results"))
 from common import MAX_JAVA, MIN_JAVA, RESULTS_CSV
+sys.path.insert(1, str(Path(__file__).resolve().parent / ".." / "results"))
 from results import general, jdks, projects, tools
 
 # Java versions range
